@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  video_player_elinux
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)
