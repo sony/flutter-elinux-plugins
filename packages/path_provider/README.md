@@ -6,12 +6,11 @@ The elinux implementation of [`path_provider`].
 ### pubspec.yaml
 ```Yaml
 dependencies:
-  path_provider: ^2.0.2
   path_provider_elinux:
     git:
       url: https://github.com/sony/flutter-elinux-plugins.git
       path: packages/path_provider
-      ref: ^1.0.0
+      ref: main
 ```
 
 ### Source code
