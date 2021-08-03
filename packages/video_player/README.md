@@ -16,14 +16,14 @@ $ sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstre
 
 ## Usage
 
-### `pubspec.yaml`
+### pubspec.yaml
 ```yaml
 dependencies:
   video_player: ^2.1.12
   video_player_elinux:
       url: https://github.com/sony/flutter-elinux-plugins.git
       path: packages/video_player
-      ref: ^0.9.0
+      ref: main
 ```
 
 ### Source code
