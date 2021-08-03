@@ -7,7 +7,7 @@ Basically, the plugins for elinux are designed to be API compatible with the the
 | Package  | Original package |
 | -------- | ---------------- |
 | [video_player_elinux](packages/video_player) | [video_player](https://github.com/flutter/plugins/tree/master/packages/video_player) (Flutter official) |
-
+| [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/plugins/tree/master/packages/path_provider) (Flutter official) |
 
 ## Companion repos
 | Repo | Purpose |
