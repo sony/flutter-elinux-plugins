@@ -1,4 +1,4 @@
-# path_provider_linux_example
+# path_provider_elinux_example
 
 Demonstrates how to use the path_provider_elinux plugin.
 
