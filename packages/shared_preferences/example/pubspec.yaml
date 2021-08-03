@@ -1,0 +1,23 @@
+name: shared_preferences_elinux_example
+description: Demonstrates how to use the shared_preferences_elinux plugin.
+publish_to: none
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.20.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared_preferences_elinux:
+    path: ../
+
+dev_dependencies:
+  flutter_driver:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  pedantic: ^1.10.0
+
+flutter:
+  uses-material-design: true
