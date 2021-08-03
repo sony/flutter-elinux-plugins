@@ -21,6 +21,7 @@ $ sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstre
 dependencies:
   video_player: ^2.1.12
   video_player_elinux:
+    git:
       url: https://github.com/sony/flutter-elinux-plugins.git
       path: packages/video_player
       ref: main
