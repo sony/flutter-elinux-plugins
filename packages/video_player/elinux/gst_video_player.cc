@@ -141,6 +141,20 @@ int64_t GstVideoPlayer::GetCurrentPosition() {
   if (!gst_element_query_position(gst_.pipeline, GST_FORMAT_TIME, &position)) {
     std::cerr << "Failed to get current position" << std::endl;
   }
+
+  // TODO: We need to handle this code in the proper plase.
+  // The VideoPlayer plugin doesn't have a main loop, so EOS message
+  // received from GStreamer cannot be processed directly in a callback
+  // function. This is because the event channel message of playback complettion
+  // needs to be thrown in the main thread.
+  if (is_completed_) {
+    is_completed_ = false;
+    stream_handler_->OnNotifyCompleted();
+    if (auto_repeat_) {
+      SetSeek(0);
+    }
+  }
+
   return position / GST_MSECOND;
 }
 
@@ -360,15 +374,7 @@ GstBusSyncReply GstVideoPlayer::HandleGstMessage(GstBus* bus,
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_EOS: {
       auto* self = reinterpret_cast<GstVideoPlayer*>(user_data);
-      // TODO: Support auto repeat. If the following is enabled,
-      // the app will freeze when playback is completed. We need to investigate
-      // the correct auto-repeat method.
-#if 0
-      if (self->auto_repeat_) {
-        self->SetSeek(0);
-      }
-#endif
-      self->stream_handler_->OnNotifyCompleted();
+      self->is_completed_ = true;
       break;
     }
     case GST_MESSAGE_WARNING: {
