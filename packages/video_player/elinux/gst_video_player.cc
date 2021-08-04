@@ -96,9 +96,14 @@ bool GstVideoPlayer::SetPlaybackRate(double rate) {
     return false;
   }
 
+  auto position = GetCurrentPosition();
+  if (position < 0) {
+    return false;
+  }
+
   if (!gst_element_seek(gst_.pipeline, rate, GST_FORMAT_TIME,
                         GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET,
-                        GetCurrentPosition() * GST_MSECOND, GST_SEEK_TYPE_SET,
+                        position * GST_MSECOND, GST_SEEK_TYPE_SET,
                         GST_CLOCK_TIME_NONE)) {
     std::cerr << "Failed to set playback rate to " << rate
               << " (gst_element_seek failed)" << std::endl;
@@ -138,8 +143,11 @@ int64_t GstVideoPlayer::GetDuration() {
 
 int64_t GstVideoPlayer::GetCurrentPosition() {
   gint64 position = 0;
+
+  // Sometimes we get an error when playing streaming videos.
   if (!gst_element_query_position(gst_.pipeline, GST_FORMAT_TIME, &position)) {
     std::cerr << "Failed to get current position" << std::endl;
+    return -1;
   }
 
   // TODO: We need to handle this code in the proper plase.
