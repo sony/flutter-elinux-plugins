@@ -48,8 +48,8 @@ class GstVideoPlayer {
 
   static void HandoffHandler(GstElement* fakesink, GstBuffer* buf,
                              GstPad* new_pad, gpointer user_data);
-  static gboolean HandleGstMessage(GstBus* bus, GstMessage* message,
-                                   gpointer user_data);
+  static GstBusSyncReply HandleGstMessage(GstBus* bus, GstMessage* message,
+                                          gpointer user_data);
   std::string ParseUri(const std::string& uri);
   bool CreatePipeline();
   void DestroyPipeline();
