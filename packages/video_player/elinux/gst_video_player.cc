@@ -189,8 +189,7 @@ bool GstVideoPlayer::CreatePipeline() {
     std::cerr << "Failed to create a bus" << std::endl;
     return false;
   }
-  gst_bus_set_sync_handler(gst_.bus, (GstBusSyncHandler)HandleGstMessage, this,
-                           NULL);
+  gst_bus_set_sync_handler(gst_.bus, HandleGstMessage, this, NULL);
 
   // Sets properties to fakesink to get the callback of a decoded frame.
   g_object_set(G_OBJECT(gst_.video_sink), "sync", TRUE, "qos", FALSE, NULL);
@@ -355,15 +354,21 @@ void GstVideoPlayer::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
 }
 
 // static
-gboolean GstVideoPlayer::HandleGstMessage(GstBus* bus, GstMessage* message,
-                                          gpointer user_data) {
+GstBusSyncReply GstVideoPlayer::HandleGstMessage(GstBus* bus,
+                                                 GstMessage* message,
+                                                 gpointer user_data) {
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_EOS: {
       auto* self = reinterpret_cast<GstVideoPlayer*>(user_data);
-      self->stream_handler_->OnNotifyCompleted();
+      // TODO: Support auto repeat. If the following is enabled,
+      // the app will freeze when playback is completed. We need to investigate
+      // the correct auto-repeat method.
+#if 0
       if (self->auto_repeat_) {
         self->SetSeek(0);
       }
+#endif
+      self->stream_handler_->OnNotifyCompleted();
       break;
     }
     case GST_MESSAGE_WARNING: {
@@ -391,5 +396,5 @@ gboolean GstVideoPlayer::HandleGstMessage(GstBus* bus, GstMessage* message,
     default:
       break;
   }
-  return TRUE;
+  return GST_BUS_PASS;
 }
