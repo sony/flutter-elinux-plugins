@@ -484,12 +484,19 @@ void VideoPlayerPlugin::HandlePositionMethodCall(
   flutter::EncodableMap result;
 
   if (players_.find(texture_id) != players_.end()) {
-    PositionMessage send_message;
-    send_message.SetTextureId(texture_id);
-    send_message.SetPosition(
-        players_[texture_id]->player->GetCurrentPosition());
-    result.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
-                   send_message.ToMap());
+    auto position = players_[texture_id]->player->GetCurrentPosition();
+    if (position < 0) {
+      auto error_message = "Failed to get current position with texture id: " +
+                           std::to_string(texture_id);
+      result.emplace(flutter::EncodableValue(kEncodableMapkeyError),
+                     flutter::EncodableValue(WrapError(error_message)));
+    } else {
+      PositionMessage send_message;
+      send_message.SetTextureId(texture_id);
+      send_message.SetPosition(position);
+      result.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
+                     send_message.ToMap());
+    }
   } else {
     auto error_message = "Couldn't find the player with texture id: " +
                          std::to_string(texture_id);
