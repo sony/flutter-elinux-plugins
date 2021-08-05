@@ -1,3 +1,7 @@
+## 0.9.3
+* Improve the error handling.
+* Add the missing mutex.
+
 ## 0.9.2
 * Changed to send stream completed messages from main thread.
 
