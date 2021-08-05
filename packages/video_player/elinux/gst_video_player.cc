@@ -155,11 +155,16 @@ int64_t GstVideoPlayer::GetCurrentPosition() {
   // received from GStreamer cannot be processed directly in a callback
   // function. This is because the event channel message of playback complettion
   // needs to be thrown in the main thread.
-  if (is_completed_) {
-    is_completed_ = false;
-    stream_handler_->OnNotifyCompleted();
-    if (auto_repeat_) {
-      SetSeek(0);
+  {
+    std::unique_lock<std::mutex> lock(mutex_event_completed_);
+    if (is_completed_) {
+      is_completed_ = false;
+      lock.unlock();
+
+      stream_handler_->OnNotifyCompleted();
+      if (auto_repeat_) {
+        SetSeek(0);
+      }
     }
   }
 
@@ -382,6 +387,7 @@ GstBusSyncReply GstVideoPlayer::HandleGstMessage(GstBus* bus,
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_EOS: {
       auto* self = reinterpret_cast<GstVideoPlayer*>(user_data);
+      std::lock_guard<std::mutex> lock(self->mutex_event_completed_);
       self->is_completed_ = true;
       break;
     }
