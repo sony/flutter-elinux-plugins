@@ -67,7 +67,7 @@ class CreateMessage {
       flutter::EncodableValue& packageName =
           map[flutter::EncodableValue("packageName")];
       if (std::holds_alternative<std::string>(packageName)) {
-        message.SetPackageName(std::get<std::string>(uri));
+        message.SetPackageName(std::get<std::string>(packageName));
       }
 
       flutter::EncodableValue& formatHint =
