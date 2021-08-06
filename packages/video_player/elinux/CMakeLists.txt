@@ -8,12 +8,7 @@ set(PLUGIN_NAME "video_player_elinux_plugin")
 
 find_package(PkgConfig)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
-pkg_check_modules(GSTREAMER REQUIRED 
-  gstreamer-1.0
-  gstreamer-app-1.0
-  gstreamer-video-1.0
-  gstreamer-audio-1.0
-)
+pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
 
 add_library(${PLUGIN_NAME} SHARED
   "video_player_elinux_plugin.cc"
