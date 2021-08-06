@@ -9,7 +9,10 @@ The implementation of the Video Player plugin for flutter elinux. APIs are desig
 This plugin uses [GStreamer](https://gstreamer.freedesktop.org/) internally.
 
 ```Shell
-$ sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-0 \
+$ sudo apt install libglib2.0-dev
+$ sudo apt install libgstreamer1.0-dev
+# Install as needed.
+$ sudo apt libgstreamer-plugins-base1.0-dev \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
 ```
