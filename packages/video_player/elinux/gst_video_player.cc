@@ -4,10 +4,6 @@
 
 #include "gst_video_player.h"
 
-#include <gst/audio/audio.h>
-#include <gst/video/gstvideometa.h>
-#include <gst/video/video.h>
-
 #include <iostream>
 
 GstVideoPlayer::GstVideoPlayer(
