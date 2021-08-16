@@ -9,6 +9,7 @@ Basically, the plugins for elinux are designed to be API compatible with the the
 | Package  | Original package |
 | -------- | ---------------- |
 | [video_player_elinux](packages/video_player) | [video_player](https://github.com/flutter/plugins/tree/master/packages/video_player) |
+| [camera_elinux](packages/camera) | [camera](https://github.com/flutter/plugins/tree/master/packages/camera) |
 | [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/plugins/tree/master/packages/path_provider) |
 | [shared_preferences_elinux](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/plugins/tree/master/packages/shared_preferences) |
 
