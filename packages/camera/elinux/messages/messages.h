@@ -6,6 +6,8 @@
 #define PACKAGES_CAMERA_CAMERA_ELINUX_MESSAGES_MESSAGES_H_
 
 #include "available_cameras_message.h"
+#include "orientation_message.h"
 #include "texture_message.h"
+#include "zoom_level_message.h"
 
 #endif  // PACKAGES_CAMERA_CAMERA_ELINUX_MESSAGES_MESSAGES_H_

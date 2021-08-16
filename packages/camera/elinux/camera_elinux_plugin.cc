@@ -10,8 +10,12 @@
 
 #include <memory>
 
+#include "camera_stream_handler_impl.h"
+#include "events/camera_initialized_event.h"
 #include "gst_camera.h"
 #include "messages/messages.h"
+#include "method_channel/method_channel_camera.h"
+#include "method_channel/method_channel_device.h"
 
 namespace {
 constexpr char kCameraChannelName[] = "plugins.flutter.io/camera";
@@ -51,9 +55,16 @@ class CameraPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrar* registrar);
 
-  CameraPlugin(flutter::TextureRegistrar* texture_registrar)
-      : texture_registrar_(texture_registrar) {}
-  virtual ~CameraPlugin() {}
+  CameraPlugin(flutter::PluginRegistrar* plugin_registrar,
+               flutter::TextureRegistrar* texture_registrar)
+      : plugin_registrar_(plugin_registrar),
+        texture_registrar_(texture_registrar) {}
+  virtual ~CameraPlugin() {
+    if (camera_) {
+      camera_->Stop();
+      camera_ = nullptr;
+    }
+  }
 
  private:
   void HandleMethodCall(
@@ -68,14 +79,37 @@ class CameraPlugin : public flutter::Plugin {
   void HandleInitializeCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleGetMaxZoomLevelCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleGetMinZoomLevelCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleSetZoomLevelCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleLockCaptureOrientationCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleDisposeCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
+  flutter::PluginRegistrar* plugin_registrar_;
   flutter::TextureRegistrar* texture_registrar_;
-  std::unique_ptr<GstCamera> camera_;
+
+  std::unique_ptr<FlutterDesktopPixelBuffer> buffer_;
+  std::unique_ptr<flutter::TextureVariant> texture_;
+  std::unique_ptr<GstCamera> camera_ = nullptr;
+  int64_t texture_id_;
+  std::unique_ptr<MethodChannelCamera> method_channel_camera_;
+  std::unique_ptr<MethodChannelDevice> method_channel_device_;
 };
 
 // static
 void CameraPlugin::RegisterWithRegistrar(flutter::PluginRegistrar* registrar) {
-  auto plugin = std::make_unique<CameraPlugin>(registrar->texture_registrar());
+  auto plugin =
+      std::make_unique<CameraPlugin>(registrar, registrar->texture_registrar());
   auto channel =
       std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           registrar->messenger(), kCameraChannelName,
@@ -94,65 +128,59 @@ void CameraPlugin::HandleMethodCall(
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   const std::string& method_name = method_call.method_name();
 
-  texture_registrar_ = nullptr;
-  std::cout << method_name.c_str() << " called" << std::endl;
-
-  if (method_name.compare(kCameraChannelApiAvailableCameras) == 0) {
+  if (!method_name.compare(kCameraChannelApiAvailableCameras)) {
     HandleAvailableCamerasCall(std::move(result));
-  } else if (method_name.compare(kCameraChannelApiCreate) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiCreate)) {
     HandleCreateCall(method_call.arguments(), std::move(result));
-  } else if (method_name.compare(kCameraChannelApiInitialize) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiInitialize)) {
     HandleInitializeCall(method_call.arguments(), std::move(result));
-  } else if (method_name.compare(kCameraChannelApiTakePicture) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiTakePicture)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiPrepareForVideoRecording) ==
-             0) {
+  } else if (!method_name.compare(kCameraChannelApiPrepareForVideoRecording)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiStartVideoRecording) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiStartVideoRecording)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiStopVideoRecording) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiStopVideoRecording)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiPauseVideoRecording) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiPauseVideoRecording)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiResumeVideoRecording) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiResumeVideoRecording)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetFlashMode) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetFlashMode)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetExposureMode) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetExposureMode)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetExposurePoint) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetExposurePoint)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiGetMinExposureOffset) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiGetMinExposureOffset)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiGetMaxExposureOffset) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiGetMaxExposureOffset)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiGetExposureOffsetStepSize) ==
-             0) {
+  } else if (!method_name.compare(kCameraChannelApiGetExposureOffsetStepSize)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetExposureOffset) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetExposureOffset)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetFocusMode) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetFocusMode)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetFocusPoint) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiSetFocusPoint)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiStartImageStream) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiStartImageStream)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiStopImageStream) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiStopImageStream)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiGetMaxZoomLevel) == 0) {
+  } else if (!method_name.compare(kCameraChannelApiGetMaxZoomLevel)) {
+    HandleGetMaxZoomLevelCall(method_call.arguments(), std::move(result));
+  } else if (!method_name.compare(kCameraChannelApiGetMinZoomLevel)) {
+    HandleGetMinZoomLevelCall(method_call.arguments(), std::move(result));
+  } else if (!method_name.compare(kCameraChannelApiSetZoomLevel)) {
+    HandleSetZoomLevelCall(method_call.arguments(), std::move(result));
+  } else if (!method_name.compare(kCameraChannelApiLockCaptureOrientation)) {
+    HandleLockCaptureOrientationCall(method_call.arguments(),
+                                     std::move(result));
+  } else if (!method_name.compare(kCameraChannelApiUnlockCaptureOrientation)) {
     result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiGetMinZoomLevel) == 0) {
-    result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiSetZoomLevel) == 0) {
-    result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiLockCaptureOrientation) ==
-             0) {
-    result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiUnlockCaptureOrientation) ==
-             0) {
-    result->NotImplemented();
-  } else if (method_name.compare(kCameraChannelApiDispose) == 0) {
-    result->NotImplemented();
+  } else if (!method_name.compare(kCameraChannelApiDispose)) {
+    HandleDisposeCall(method_call.arguments(), std::move(result));
   } else {
     result->NotImplemented();
   }
@@ -177,17 +205,35 @@ void CameraPlugin::HandleAvailableCamerasCall(
 void CameraPlugin::HandleCreateCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (!message) {
-    return;
-  }
-
   // auto meta = CreateMessage::FromMap(message);
-  camera_ = std::make_unique<GstCamera>();
-  // camera_->Play();
+
+  buffer_ = std::make_unique<FlutterDesktopPixelBuffer>();
+  texture_ =
+      std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
+          [host = this](size_t width,
+                        size_t height) -> const FlutterDesktopPixelBuffer* {
+            host->buffer_->width = host->camera_->GetPreviewWidth();
+            host->buffer_->height = host->camera_->GetPreviewHeight();
+            host->buffer_->buffer = host->camera_->GetPreviewFrameBuffer();
+            return host->buffer_.get();
+          }));
+  auto texture_id = texture_registrar_->RegisterTexture(texture_.get());
+  auto stream_handler = std::make_unique<CameraStreamHandlerImpl>(
+      // OnNotifyInitialized
+      []() {},
+      // OnNotifyFrameDecoded
+      [texture_id, host = this]() {
+        host->texture_registrar_->MarkTextureFrameAvailable(texture_id);
+      },
+      // OnNotifyCompleted
+      []() {});
+
+  camera_ = std::make_unique<GstCamera>(std::move(stream_handler));
+  texture_id_ = texture_id;
 
   flutter::EncodableMap reply;
   reply[flutter::EncodableValue("cameraId")] =
-      flutter::EncodableValue((int64_t)1);  // texture id
+      flutter::EncodableValue(texture_id);
 
   result->Success(flutter::EncodableValue(reply));
 }
@@ -195,10 +241,89 @@ void CameraPlugin::HandleCreateCall(
 void CameraPlugin::HandleInitializeCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  if (!message) {
+  camera_->Play();
+  double preview_width = camera_->GetPreviewWidth();
+  double preview_height = camera_->GetPreviewHeight();
+
+  {
+    method_channel_camera_ =
+        std::make_unique<MethodChannelCamera>(plugin_registrar_, texture_id_);
+
+    CameraInitializedEvent message;
+    message.SetPreviewWidth(preview_width);
+    message.SetPreviewHeight(preview_height);
+    message.SetFocusMode(FocusMode::kAuto);
+    message.SetExposureMode(ExposureMode::kAuto);
+    message.SetFocusPointSupported(false);
+    message.SetExposurePointSupported(false);
+
+    method_channel_camera_->SendInitializedEvent(message);
+  }
+
+  {
+    method_channel_device_ =
+        std::make_unique<MethodChannelDevice>(plugin_registrar_);
+    auto orientation = DeviceOrientation::kLandscapeRight;
+
+    method_channel_device_->SendDeviceOrientationChangeEvent(orientation);
+  }
+  result->Success();
+}
+
+void CameraPlugin::HandleGetMaxZoomLevelCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+  result->Success(flutter::EncodableValue(camera_->GetMaxZoomLevel()));
+}
+
+void CameraPlugin::HandleGetMinZoomLevelCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+  result->Success(flutter::EncodableValue(camera_->GetMinZoomLevel()));
+}
+
+void CameraPlugin::HandleSetZoomLevelCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
     return;
   }
 
+  auto meta = ZoomLevelMessage::FromMap(*message);
+  if (camera_->SetZoomLevel(meta.GetZoom())) {
+    result->Success();
+  } else {
+    result->Error("Failed to change the zoom level", "Check the zoom level");
+  }
+}
+
+void CameraPlugin::HandleLockCaptureOrientationCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  result->NotImplemented();
+}
+
+void CameraPlugin::HandleDisposeCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  // TODO: add multi camera support.
+  if (camera_) {
+    camera_->Stop();
+    camera_ = nullptr;
+    texture_registrar_->UnregisterTexture(texture_id_);
+  }
   result->Success();
 }
 

@@ -6,7 +6,8 @@
 
 #include <iostream>
 
-GstCamera::GstCamera() {
+GstCamera::GstCamera(std::unique_ptr<CameraStreamHandler> handler)
+    : stream_handler_(std::move(handler)) {
   gst_.pipeline = nullptr;
   gst_.camerabin = nullptr;
   gst_.video_convert = nullptr;
@@ -24,9 +25,7 @@ GstCamera::GstCamera() {
   // Prerolls before getting information from the pipeline.
   Preroll();
 
-  // Sets internal video size and buffier.
-  GetVideoSize(width_, height_);
-  pixels_.reset(new uint32_t[width_ * height_]);
+  GetZoomMaxMinSize(max_zoom_level_, min_zoom_level_);
 }
 
 GstCamera::~GstCamera() {
@@ -35,11 +34,22 @@ GstCamera::~GstCamera() {
 }
 
 bool GstCamera::Play() {
-  if (gst_element_set_state(gst_.pipeline, GST_STATE_PLAYING) ==
-      GST_STATE_CHANGE_FAILURE) {
+  auto result = gst_element_set_state(gst_.pipeline, GST_STATE_PLAYING);
+  if (result == GST_STATE_CHANGE_FAILURE) {
     std::cerr << "Failed to change the state to PLAYING" << std::endl;
     return false;
   }
+
+  // Waits until the state becomes GST_STATE_PLAYING.
+  if (result == GST_STATE_CHANGE_ASYNC) {
+    GstState state;
+    result =
+        gst_element_get_state(gst_.pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
+    if (result == GST_STATE_CHANGE_FAILURE) {
+      std::cerr << "Failed to get the current state" << std::endl;
+    }
+  }
+
   return true;
 }
 
@@ -61,7 +71,27 @@ bool GstCamera::Stop() {
   return true;
 }
 
-const uint8_t* GstCamera::GetFrameBuffer() {
+bool GstCamera::SetZoomLevel(float zoom) {
+  if (zoom_level_ == zoom) {
+    return true;
+  }
+  if (max_zoom_level_ < zoom) {
+    std::cerr << "zoom level(" << zoom << ") is over the max-zoom level("
+              << max_zoom_level_ << ")" << std::endl;
+    return false;
+  }
+  if (min_zoom_level_ > zoom) {
+    std::cerr << "zoom level(" << zoom << ") is under the min-zoom level("
+              << min_zoom_level_ << ")" << std::endl;
+    return false;
+  }
+
+  g_object_set(gst_.camerabin, "zoom", zoom, NULL);
+  zoom_level_ = zoom;
+  return true;
+}
+
+const uint8_t* GstCamera::GetPreviewFrameBuffer() {
   std::shared_lock<std::shared_mutex> lock(mutex_buffer_);
   if (!gst_.buffer) {
     return nullptr;
@@ -202,28 +232,14 @@ void GstCamera::DestroyPipeline() {
   }
 }
 
-void GstCamera::GetVideoSize(int32_t& width, int32_t& height) {
-  if (!gst_.pipeline || !gst_.video_sink) {
-    std::cerr
-        << "Failed to get video size. The pileline hasn't initialized yet.";
+void GstCamera::GetZoomMaxMinSize(float& max, float& min) {
+  if (!gst_.pipeline || !gst_.camerabin) {
+    std::cerr << "The pileline hasn't initialized yet.";
     return;
   }
 
-  auto* sink_pad = gst_element_get_static_pad(gst_.video_sink, "sink");
-  if (!sink_pad) {
-    std::cerr << "Failed to get a pad";
-    return;
-  }
-
-  auto* caps = gst_pad_get_current_caps(sink_pad);
-  auto* structure = gst_caps_get_structure(caps, 0);
-  if (!structure) {
-    std::cerr << "Failed to get a structure";
-    return;
-  }
-
-  gst_structure_get_int(structure, "width", &width);
-  gst_structure_get_int(structure, "height", &height);
+  g_object_get(gst_.camerabin, "max-zoom", &max, NULL);
+  min = 1.0;
 }
 
 // static
@@ -251,7 +267,7 @@ void GstCamera::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
     self->gst_.buffer = nullptr;
   }
   self->gst_.buffer = gst_buffer_ref(buf);
-  //self->stream_handler_->OnNotifyFrameDecoded();
+  self->stream_handler_->OnNotifyFrameDecoded();
 }
 
 // static

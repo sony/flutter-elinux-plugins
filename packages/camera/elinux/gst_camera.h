@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PACKAGES_CAMERA_CAMERA_ELINUX_GST_VIDEO_PLAYER_H_
-#define PACKAGES_CAMERA_CAMERA_ELINUX_GST_VIDEO_PLAYER_H_
+#ifndef PACKAGES_CAMERA_CAMERA_ELINUX_GST_CAMERA_H_
+#define PACKAGES_CAMERA_CAMERA_ELINUX_GST_CAMERA_H_
 
 #include <gst/gst.h>
 
@@ -11,18 +11,24 @@
 #include <shared_mutex>
 #include <string>
 
+#include "camera_stream_handler.h"
+
 class GstCamera {
  public:
-  GstCamera();
+  GstCamera(std::unique_ptr<CameraStreamHandler> handler);
   ~GstCamera();
 
   bool Play();
   bool Pause();
   bool Stop();
 
-  const uint8_t* GetFrameBuffer();
-  int32_t GetWidth() const { return width_; };
-  int32_t GetHeight() const { return height_; };
+  bool SetZoomLevel(float zoom);
+  float GetMaxZoomLevel() const { return max_zoom_level_; };
+  float GetMinZoomLevel() const { return min_zoom_level_; };
+
+  const uint8_t* GetPreviewFrameBuffer();
+  int32_t GetPreviewWidth() const { return width_; };
+  int32_t GetPreviewHeight() const { return height_; };
 
  private:
   struct GstCameraElements {
@@ -43,13 +49,17 @@ class GstCamera {
   bool CreatePipeline();
   void DestroyPipeline();
   void Preroll();
-  void GetVideoSize(int32_t& width, int32_t& height);
+  void GetZoomMaxMinSize(float& max, float& min);
 
   GstCameraElements gst_;
   std::unique_ptr<uint32_t> pixels_;
-  int32_t width_;
-  int32_t height_;
+  int32_t width_ = -1;
+  int32_t height_ = -1;
   std::shared_mutex mutex_buffer_;
+  std::unique_ptr<CameraStreamHandler> stream_handler_;
+  float max_zoom_level_;
+  float min_zoom_level_;
+  float zoom_level_ = 1.0f;
 };
 
-#endif  // PACKAGES_CAMERA_CAMERA_ELINUX_GST_VIDEO_PLAYER_H_
+#endif  // PACKAGES_CAMERA_CAMERA_ELINUX_GST_CAMERA_H_
