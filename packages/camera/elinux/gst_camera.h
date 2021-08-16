@@ -18,6 +18,9 @@ class GstCamera {
   GstCamera(std::unique_ptr<CameraStreamHandler> handler);
   ~GstCamera();
 
+  static void GstLibraryLoad();
+  static void GstLibraryUnload();
+
   bool Play();
   bool Pause();
   bool Stop();

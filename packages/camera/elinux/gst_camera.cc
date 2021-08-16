@@ -33,6 +33,12 @@ GstCamera::~GstCamera() {
   DestroyPipeline();
 }
 
+// static
+void GstCamera::GstLibraryLoad() { gst_init(NULL, NULL); }
+
+// static
+void GstCamera::GstLibraryUnload() { gst_deinit(); }
+
 bool GstCamera::Play() {
   auto result = gst_element_set_state(gst_.pipeline, GST_STATE_PLAYING);
   if (result == GST_STATE_CHANGE_FAILURE) {

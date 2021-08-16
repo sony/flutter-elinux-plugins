@@ -58,12 +58,15 @@ class CameraPlugin : public flutter::Plugin {
   CameraPlugin(flutter::PluginRegistrar* plugin_registrar,
                flutter::TextureRegistrar* texture_registrar)
       : plugin_registrar_(plugin_registrar),
-        texture_registrar_(texture_registrar) {}
+        texture_registrar_(texture_registrar) {
+    GstCamera::GstLibraryLoad();
+  }
   virtual ~CameraPlugin() {
     if (camera_) {
       camera_->Stop();
       camera_ = nullptr;
     }
+    GstCamera::GstLibraryUnload();
   }
 
  private:
