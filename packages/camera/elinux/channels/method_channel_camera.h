@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_METHOD_CHANNEL_METHOD_CHANNEL_DEVICE_H_
-#define PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_METHOD_CHANNEL_METHOD_CHANNEL_DEVICE_H_
+#ifndef PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_CHANNELS_METHOD_CHANNEL_CAMERA_H_
+#define PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_CHANNELS_METHOD_CHANNEL_CAMERA_H_
 
 #include <flutter/encodable_value.h>
 #include <flutter/method_channel.h>
@@ -12,14 +12,14 @@
 
 #include <string>
 
-#include "types/orientation.h"
+#include "events/camera_initialized_event.h"
 
-class MethodChannelDevice {
+class MethodChannelCamera {
  public:
-  MethodChannelDevice(flutter::PluginRegistrar* registrar);
-  ~MethodChannelDevice() = default;
+  MethodChannelCamera(flutter::PluginRegistrar* registrar, int64_t camera_id);
+  ~MethodChannelCamera() = default;
 
-  void SendDeviceOrientationChangeEvent(const DeviceOrientation& orientation);
+  void SendInitializedEvent(CameraInitializedEvent& message);
 
  private:
   void Send(const std::string& method,
@@ -28,4 +28,4 @@ class MethodChannelDevice {
   std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>> channel_;
 };
 
-#endif  // PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_METHOD_CHANNEL_METHOD_CHANNEL_DEVICE_H_
+#endif  // PACKAGES_CAMERA_CAMERA_ELINUX_CAMERA_CHANNELS_METHOD_CHANNEL_CAMERA_H_

@@ -34,7 +34,7 @@ Import `camera` in your Dart code:
 import 'package:camera/camera.dart';
 ```
 
-## Troubleshoting
+## Troubleshooting
 
 If you get the following error:
 ```Shell
@@ -43,5 +43,6 @@ Wrong JPEG library version: library is 62, caller expects 80
 
 , try the following:
 ```Shell
-sudo mv /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstjpeg.so /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstjpeg.so.org
+sudo mv /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstjpeg.so \
+        /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstjpeg.so.org
 ```

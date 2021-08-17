@@ -12,12 +12,13 @@ pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
 
 add_library(${PLUGIN_NAME} SHARED
   "camera_elinux_plugin.cc"
+  "channels/event_channel_image_stream.cc"
+  "channels/method_channel_camera.cc"
+  "channels/method_channel_device.cc"
   "gst_camera.cc"
   "types/exposure_mode.cc"
   "types/focus_mode.cc"
   "types/orientation.cc"
-  "method_channel/method_channel_camera.cc"
-  "method_channel/method_channel_device.cc"
 )
 apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
