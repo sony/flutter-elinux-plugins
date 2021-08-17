@@ -227,6 +227,9 @@ void CameraPlugin::HandleCreateCall(
             buffer_->height = camera_->GetPreviewHeight();
             buffer_->buffer = camera_->GetPreviewFrameBuffer();
 
+            // TODO: We need to handle this code (event_channel_image_stream_)
+            // in the proper place, but the Camera plugin doesn't have a main
+            // loop.
             if (event_channel_image_stream_) {
               event_channel_image_stream_->Send(buffer_->width, buffer_->height,
                                                 buffer_->buffer);
@@ -285,16 +288,26 @@ void CameraPlugin::HandleInitializeCall(
 void CameraPlugin::HandleStartImageStreamCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+// TODO: Support StartImageStream API.
+#if 0
   event_channel_image_stream_ =
       std::make_unique<EventChannelImageStream>(plugin_registrar_);
   result->Success();
+#else
+  result->NotImplemented();
+#endif
 }
 
 void CameraPlugin::HandleStopImageStreamCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+// TODO: Support StopImageStream API.
+#if 0
   event_channel_image_stream_ = nullptr;
   result->Success();
+#else
+  result->NotImplemented();
+#endif
 }
 
 void CameraPlugin::HandleGetMaxZoomLevelCall(
