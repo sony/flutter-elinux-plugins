@@ -11,11 +11,12 @@
 #include <memory>
 
 #include "camera_stream_handler_impl.h"
+#include "channels/event_channel_image_stream.h"
+#include "channels/method_channel_camera.h"
+#include "channels/method_channel_device.h"
 #include "events/camera_initialized_event.h"
 #include "gst_camera.h"
 #include "messages/messages.h"
-#include "method_channel/method_channel_camera.h"
-#include "method_channel/method_channel_device.h"
 
 namespace {
 constexpr char kCameraChannelName[] = "plugins.flutter.io/camera";
@@ -82,6 +83,12 @@ class CameraPlugin : public flutter::Plugin {
   void HandleInitializeCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleStartImageStreamCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleStopImageStreamCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void HandleGetMaxZoomLevelCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
@@ -105,6 +112,9 @@ class CameraPlugin : public flutter::Plugin {
   std::unique_ptr<flutter::TextureVariant> texture_;
   std::unique_ptr<GstCamera> camera_ = nullptr;
   int64_t texture_id_;
+
+  std::unique_ptr<EventChannelImageStream> event_channel_image_stream_ =
+      nullptr;
   std::unique_ptr<MethodChannelCamera> method_channel_camera_;
   std::unique_ptr<MethodChannelDevice> method_channel_device_;
 };
@@ -168,9 +178,9 @@ void CameraPlugin::HandleMethodCall(
   } else if (!method_name.compare(kCameraChannelApiSetFocusPoint)) {
     result->NotImplemented();
   } else if (!method_name.compare(kCameraChannelApiStartImageStream)) {
-    result->NotImplemented();
+    HandleStartImageStreamCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiStopImageStream)) {
-    result->NotImplemented();
+    HandleStopImageStreamCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiGetMaxZoomLevel)) {
     HandleGetMaxZoomLevelCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiGetMinZoomLevel)) {
@@ -208,28 +218,30 @@ void CameraPlugin::HandleAvailableCamerasCall(
 void CameraPlugin::HandleCreateCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  // auto meta = CreateMessage::FromMap(message);
-
   buffer_ = std::make_unique<FlutterDesktopPixelBuffer>();
   texture_ =
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
-          [host = this](size_t width,
-                        size_t height) -> const FlutterDesktopPixelBuffer* {
-            host->buffer_->width = host->camera_->GetPreviewWidth();
-            host->buffer_->height = host->camera_->GetPreviewHeight();
-            host->buffer_->buffer = host->camera_->GetPreviewFrameBuffer();
-            return host->buffer_.get();
+          [this](size_t width,
+                 size_t height) -> const FlutterDesktopPixelBuffer* {
+            buffer_->width = camera_->GetPreviewWidth();
+            buffer_->height = camera_->GetPreviewHeight();
+            buffer_->buffer = camera_->GetPreviewFrameBuffer();
+
+            // TODO: We need to handle this code (event_channel_image_stream_)
+            // in the proper place, but the Camera plugin doesn't have a main
+            // loop.
+            if (event_channel_image_stream_) {
+              event_channel_image_stream_->Send(buffer_->width, buffer_->height,
+                                                buffer_->buffer);
+            }
+
+            return buffer_.get();
           }));
   auto texture_id = texture_registrar_->RegisterTexture(texture_.get());
-  auto stream_handler = std::make_unique<CameraStreamHandlerImpl>(
-      // OnNotifyInitialized
-      []() {},
-      // OnNotifyFrameDecoded
-      [texture_id, host = this]() {
-        host->texture_registrar_->MarkTextureFrameAvailable(texture_id);
-      },
-      // OnNotifyCompleted
-      []() {});
+  auto stream_handler =
+      std::make_unique<CameraStreamHandlerImpl>([texture_id, this]() {
+        texture_registrar_->MarkTextureFrameAvailable(texture_id);
+      });
 
   camera_ = std::make_unique<GstCamera>(std::move(stream_handler));
   texture_id_ = texture_id;
@@ -271,6 +283,31 @@ void CameraPlugin::HandleInitializeCall(
     method_channel_device_->SendDeviceOrientationChangeEvent(orientation);
   }
   result->Success();
+}
+
+void CameraPlugin::HandleStartImageStreamCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+// TODO: Support StartImageStream API.
+#if 0
+  event_channel_image_stream_ =
+      std::make_unique<EventChannelImageStream>(plugin_registrar_);
+  result->Success();
+#else
+  result->NotImplemented();
+#endif
+}
+
+void CameraPlugin::HandleStopImageStreamCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+// TODO: Support StopImageStream API.
+#if 0
+  event_channel_image_stream_ = nullptr;
+  result->Success();
+#else
+  result->NotImplemented();
+#endif
 }
 
 void CameraPlugin::HandleGetMaxZoomLevelCall(

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "method_channel/method_channel_camera.h"
+#include "channels/method_channel_camera.h"
 
 #include <flutter/standard_method_codec.h>
 
