@@ -221,30 +221,24 @@ void CameraPlugin::HandleCreateCall(
   buffer_ = std::make_unique<FlutterDesktopPixelBuffer>();
   texture_ =
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
-          [host = this](size_t width,
-                        size_t height) -> const FlutterDesktopPixelBuffer* {
-            host->buffer_->width = host->camera_->GetPreviewWidth();
-            host->buffer_->height = host->camera_->GetPreviewHeight();
-            host->buffer_->buffer = host->camera_->GetPreviewFrameBuffer();
+          [this](size_t width,
+                 size_t height) -> const FlutterDesktopPixelBuffer* {
+            buffer_->width = camera_->GetPreviewWidth();
+            buffer_->height = camera_->GetPreviewHeight();
+            buffer_->buffer = camera_->GetPreviewFrameBuffer();
 
-            if (host->event_channel_image_stream_) {
-              host->event_channel_image_stream_->Send(host->buffer_->width,
-                                                      host->buffer_->height,
-                                                      host->buffer_->buffer);
+            if (event_channel_image_stream_) {
+              event_channel_image_stream_->Send(buffer_->width, buffer_->height,
+                                                buffer_->buffer);
             }
 
-            return host->buffer_.get();
+            return buffer_.get();
           }));
   auto texture_id = texture_registrar_->RegisterTexture(texture_.get());
-  auto stream_handler = std::make_unique<CameraStreamHandlerImpl>(
-      // OnNotifyInitialized
-      []() {},
-      // OnNotifyFrameDecoded
-      [texture_id, host = this]() {
-        host->texture_registrar_->MarkTextureFrameAvailable(texture_id);
-      },
-      // OnNotifyCompleted
-      []() {});
+  auto stream_handler =
+      std::make_unique<CameraStreamHandlerImpl>([texture_id, this]() {
+        texture_registrar_->MarkTextureFrameAvailable(texture_id);
+      });
 
   camera_ = std::make_unique<GstCamera>(std::move(stream_handler));
   texture_id_ = texture_id;
