@@ -13,8 +13,8 @@
 namespace {
 constexpr char kChannelName[] = "plugins.flutter.io/camera/imageStream";
 
-// See:
-// https://developer.android.com/reference/android/media/Image#getFormat()
+// See: [getFormat()] in 
+// https://developer.android.com/reference/android/media/Image
 constexpr int32_t kImageFormatRGBA8888 = 4;
 };  // namespace
 
