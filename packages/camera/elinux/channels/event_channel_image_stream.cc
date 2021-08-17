@@ -8,13 +8,14 @@
 #include <flutter/event_stream_handler_functions.h>
 #include <flutter/standard_method_codec.h>
 
-#include <memory>
-#include <iostream>
-#include <cstdint>
-#include <cstring>
+#include <vector>
 
 namespace {
 constexpr char kChannelName[] = "plugins.flutter.io/camera/imageStream";
+
+// See:
+// https://developer.android.com/reference/android/media/Image#getFormat()
+constexpr int32_t kImageFormatRGBA8888 = 4;
 };  // namespace
 
 // See:
@@ -48,23 +49,22 @@ EventChannelImageStream::EventChannelImageStream(
 void EventChannelImageStream::Send(const int32_t& width, const int32_t& height,
                                    const uint8_t* pixels) {
   const uint32_t len = width * 4 * height;
-  std::unique_ptr<uint8_t> bytes;
-  bytes.reset(new uint8_t[len]);
-  std::memcpy(&bytes, pixels, len);
+  std::vector<uint8_t> bytes(pixels, pixels + len);
 
-  flutter::EncodableMap planes = {
+  flutter::EncodableList planes;
+  flutter::EncodableMap plane = {
       {flutter::EncodableValue("bytesPerRow"), flutter::EncodableValue(width)},
       {flutter::EncodableValue("bytesPerPixel"), flutter::EncodableValue(4)},
-      {flutter::EncodableValue("bytes"), flutter::EncodableValue(bytes.get())},
+      {flutter::EncodableValue("bytes"), flutter::EncodableValue(bytes)},
   };
+  flutter::EncodableValue plane_value(plane);
+  planes.push_back(plane_value);
 
-  // See:
-  // https://developer.android.com/reference/android/media/Image#getFormat()
-  constexpr int32_t format = 4; /*FLEX_RGBA_8888*/
   flutter::EncodableMap encodables = {
       {flutter::EncodableValue("width"), flutter::EncodableValue(width)},
       {flutter::EncodableValue("height"), flutter::EncodableValue(height)},
-      {flutter::EncodableValue("format"), flutter::EncodableValue(format)},
+      {flutter::EncodableValue("format"),
+       flutter::EncodableValue(kImageFormatRGBA8888)},
       {flutter::EncodableValue("planes"), flutter::EncodableValue(planes)}};
   flutter::EncodableValue event(encodables);
 

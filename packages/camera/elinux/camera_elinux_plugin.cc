@@ -218,8 +218,6 @@ void CameraPlugin::HandleAvailableCamerasCall(
 void CameraPlugin::HandleCreateCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-  // auto meta = CreateMessage::FromMap(message);
-
   buffer_ = std::make_unique<FlutterDesktopPixelBuffer>();
   texture_ =
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
@@ -228,6 +226,13 @@ void CameraPlugin::HandleCreateCall(
             host->buffer_->width = host->camera_->GetPreviewWidth();
             host->buffer_->height = host->camera_->GetPreviewHeight();
             host->buffer_->buffer = host->camera_->GetPreviewFrameBuffer();
+
+            if (host->event_channel_image_stream_) {
+              host->event_channel_image_stream_->Send(host->buffer_->width,
+                                                      host->buffer_->height,
+                                                      host->buffer_->buffer);
+            }
+
             return host->buffer_.get();
           }));
   auto texture_id = texture_registrar_->RegisterTexture(texture_.get());
@@ -237,14 +242,6 @@ void CameraPlugin::HandleCreateCall(
       // OnNotifyFrameDecoded
       [texture_id, host = this]() {
         host->texture_registrar_->MarkTextureFrameAvailable(texture_id);
-        if (host->event_channel_image_stream_) {
-          auto width = host->camera_->GetPreviewWidth();
-          auto height = host->buffer_->height =
-              host->camera_->GetPreviewHeight();
-          auto buffer = host->buffer_->buffer =
-              host->camera_->GetPreviewFrameBuffer();
-          host->event_channel_image_stream_->Send(width, height, buffer);
-        }
       },
       // OnNotifyCompleted
       []() {});
