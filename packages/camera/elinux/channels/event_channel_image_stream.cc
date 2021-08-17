@@ -13,13 +13,11 @@
 namespace {
 constexpr char kChannelName[] = "plugins.flutter.io/camera/imageStream";
 
-// See: [getFormat()] in 
+// See: [getFormat()] in
 // https://developer.android.com/reference/android/media/Image
 constexpr int32_t kImageFormatRGBA8888 = 4;
 };  // namespace
 
-// See:
-// flutter/plugins/packages/camera/camera/android/src/main/java/io/flutter/plugins/camera/Camera.java
 EventChannelImageStream::EventChannelImageStream(
     flutter::PluginRegistrar* registrar) {
   auto event_channel =
@@ -46,6 +44,8 @@ EventChannelImageStream::EventChannelImageStream(
   event_channel->SetStreamHandler(std::move(event_channel_handler));
 }
 
+// See: [setImageStreamImageAvailableListener] in
+// flutter/plugins/packages/camera/camera/android/src/main/java/io/flutter/plugins/camera/Camera.java
 void EventChannelImageStream::Send(const int32_t& width, const int32_t& height,
                                    const uint8_t* pixels) {
   const uint32_t len = width * 4 * height;
