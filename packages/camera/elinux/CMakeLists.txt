@@ -9,7 +9,6 @@ set(PLUGIN_NAME "camera_elinux_plugin")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(PkgConfig)
-#pkg_check_modules(GLib REQUIRED IMPORTED_TARGET glib-2.0)
 pkg_check_modules(GStreamer REQUIRED IMPORTED_TARGET gstreamer-1.0)
 
 add_library(${PLUGIN_NAME} SHARED
