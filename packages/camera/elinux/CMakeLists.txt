@@ -6,9 +6,10 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # not be changed
 set(PLUGIN_NAME "camera_elinux_plugin")
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
 find_package(PkgConfig)
-pkg_check_modules(GLIB REQUIRED glib-2.0)
-pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+pkg_check_modules(GStreamer REQUIRED IMPORTED_TARGET gstreamer-1.0)
 
 add_library(${PLUGIN_NAME} SHARED
   "camera_elinux_plugin.cc"
@@ -28,18 +29,7 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter flutter_wrapper_plugin)
 
-target_include_directories(${PLUGIN_NAME}
-  PRIVATE
-    "./"
-    ${GLIB_INCLUDE_DIRS}
-    ${GSTREAMER_INCLUDE_DIRS}
-)
-
-target_link_libraries(${PLUGIN_NAME}
-  PRIVATE
-    ${GLIB_LIBRARIES}
-    ${GSTREAMER_LIBRARIES}
-)
+target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GStreamer)
 
 # List of absolute paths to libraries that should be bundled with the plugin
 set(camera_elinux_bundled_libraries
