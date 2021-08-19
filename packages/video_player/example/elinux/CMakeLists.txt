@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(runner LANGUAGES CXX)
 
-set(BINARY_NAME "video_player_elinux_example")
+set(BINARY_NAME "video_player_example")
 
 cmake_policy(SET CMP0063 NEW)
 
