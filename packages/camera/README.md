@@ -7,7 +7,6 @@ The implementation of the camera plugin for flutter elinux. APIs are designed to
 This plugin uses [GStreamer](https://gstreamer.freedesktop.org/) internally.
 
 ```Shell
-$ sudo apt install libglib2.0-dev
 $ sudo apt install libgstreamer1.0-dev
 # Install as needed.
 $ sudo apt libgstreamer-plugins-base1.0-dev \
