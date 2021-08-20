@@ -12,6 +12,7 @@
 #include <flutter/plugin_registrar.h>
 #include <flutter/standard_message_codec.h>
 #include <flutter/standard_method_codec.h>
+#include <unistd.h>
 
 #include <unordered_map>
 
@@ -130,6 +131,8 @@ class VideoPlayerPlugin : public flutter::Plugin {
   flutter::EncodableValue WrapError(const std::string& message,
                                     const std::string& code = std::string(),
                                     const std::string& details = std::string());
+
+  const std::string GetExecutableDirectory();
 
   flutter::PluginRegistrar* plugin_registrar_;
   flutter::TextureRegistrar* texture_registrar_;
@@ -283,7 +286,7 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
   std::string uri;
   if (!meta.GetAsset().empty()) {
     // todo: gets propery path of the Flutter project.
-    std::string flutter_project_path = "./bundle/data/";
+    std::string flutter_project_path = GetExecutableDirectory() + "/data/";
     uri = flutter_project_path + "flutter_assets/" + meta.GetAsset();
   } else {
     uri = meta.GetUri();
@@ -585,6 +588,15 @@ flutter::EncodableValue VideoPlayerPlugin::WrapError(
       {flutter::EncodableValue("code"), flutter::EncodableValue(code)},
       {flutter::EncodableValue("details"), flutter::EncodableValue(details)}};
   return flutter::EncodableValue(map);
+}
+
+const std::string VideoPlayerPlugin::GetExecutableDirectory() {
+  static char buf[1024] = {};
+  readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+
+  std::string exe_path = std::string(buf);
+  const int slash_pos = exe_path.find_last_of('/');
+  return exe_path.substr(0, slash_pos);
 }
 
 }  // namespace
