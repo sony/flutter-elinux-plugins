@@ -9,7 +9,7 @@
 
 namespace {
 constexpr char kChannelName[] = "flutter.io/cameraPlugin/device";
-constexpr char kChannelMethodInitialized[] = "initialized";
+constexpr char kChannelMethodOrientationChanged[] = "orientation_changed";
 
 constexpr char kOrientation[] = "orientation";
 };  // namespace
@@ -27,7 +27,7 @@ void MethodChannelDevice::SendDeviceOrientationChangeEvent(
       flutter::EncodableValue(SerializeDeviceOrientation(orientation));
   auto value = std::make_unique<flutter::EncodableValue>(mp);
 
-  Send(kChannelMethodInitialized, std::move(value));
+  Send(kChannelMethodOrientationChanged, std::move(value));
 }
 
 void MethodChannelDevice::Send(

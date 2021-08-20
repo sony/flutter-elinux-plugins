@@ -9,7 +9,7 @@ This plugin uses [GStreamer](https://gstreamer.freedesktop.org/) internally.
 ```Shell
 $ sudo apt install libgstreamer1.0-dev
 # Install as needed.
-$ sudo apt libgstreamer-plugins-base1.0-dev \
+$ sudo apt install libgstreamer-plugins-base1.0-dev \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
 ```
