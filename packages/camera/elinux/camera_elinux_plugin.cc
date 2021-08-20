@@ -208,7 +208,7 @@ void CameraPlugin::HandleAvailableCamerasCall(
     AvailableCamerasMessage camera;
     camera.SetName("camera" + std::to_string(i));
     camera.SetSensorOrientation(0);
-    camera.SetLensFacing("back");
+    camera.SetLensFacing("external");
     cameras.push_back(camera.ToMap());
   }
 
