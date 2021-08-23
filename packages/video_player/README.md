@@ -12,7 +12,7 @@ This plugin uses [GStreamer](https://gstreamer.freedesktop.org/) internally.
 $ sudo apt install libglib2.0-dev
 $ sudo apt install libgstreamer1.0-dev
 # Install as needed.
-$ sudo apt libgstreamer-plugins-base1.0-dev \
+$ sudo apt install libgstreamer-plugins-base1.0-dev \
     gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
 ```
@@ -35,3 +35,12 @@ Import `video_player` in your Dart code:
 ```dart
 import 'package:video_player/video_player.dart';
 ```
+
+### Customize for your target devices
+If you this plugin on your target devices, you will need to customize the pipeline in the source file.So, replace the `videoconvert` element with a H/W accelerated element of your target device to perform well.
+
+#### default:
+playbin uri=<file> video-sink="videoconvert ! video/x-raw,format=RGBA ! fakesink"
+
+#### e.g. customization for i.MX 8M platforms:
+playbin uri=<file> video-sink="imxvideoconvert_g2d ! video/x-raw,format=RGBA ! fakesink"
