@@ -8,8 +8,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-extern "C" __attribute__((visibility("default"))) __attribute__((used)) int
-joystick_open(const char* device) {
+extern "C" __attribute__((visibility("default"))) int joystick_open(
+    const char* device) {
   int fd = open(device, O_NONBLOCK);
   if (fd < 0) {
     fprintf(stderr, "Failed to open %s (%d)\n", device, errno);
@@ -17,8 +17,8 @@ joystick_open(const char* device) {
   return fd;
 }
 
-extern "C" __attribute__((visibility("default"))) __attribute__((used)) int
-joystick_read(int fd, js_event* ev) {
+extern "C" __attribute__((visibility("default"))) int joystick_read(
+    int fd, js_event* ev) {
   int bytes = read(fd, ev, sizeof(*ev));
   if (bytes < 0) {
     return -1;
