@@ -12,6 +12,7 @@ Basically, the plugins for elinux are designed to be API compatible with the the
 | [camera_elinux](packages/camera) | [camera](https://github.com/flutter/plugins/tree/master/packages/camera) |
 | [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/plugins/tree/master/packages/path_provider) |
 | [shared_preferences_elinux](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/plugins/tree/master/packages/shared_preferences) |
+| [joystick](packages/joystick) | - |
 
 ## Getting Started
 
@@ -23,6 +24,6 @@ For help getting started with Flutter for eLinux, view our online
 | Repo | Purpose |
 | ------------- | ------------- |
 | [flutter-elinux](https://github.com/sony/flutter-elinux) | Flutter tools for eLinux |
-| [flutter-elinux-plugins](https://github.com/sony/flutter-elinux-plugins) | Flutter plugins for eLinux |
+| flutter-elinux-plugins | Flutter plugins for eLinux |
 | [flutter-embedded-linux](https://github.com/sony/flutter-embedded-linux) | eLinux embedding for Flutter |
 | [meta-flutter](https://github.com/sony/meta-flutter) | Yocto recipes of eLinux embedding for Flutter |
