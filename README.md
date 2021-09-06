@@ -1,13 +1,13 @@
-# Flutter plugins for Embedded Linux (eLinux)
+# Flutter plugins for eLinux
 
 This repo is a companion repo to the [flutter-elinux](https://github.com/sony/flutter-elinux). It contains the source code for Flutter plugins for eLinux. Check the packages directory for all plugins.
 
 ## Plugins
 
-Basically, the plugins for elinux are designed to be API compatible with the the official Flutter plugins.
+The plugins for elinux are basically designed to be API compatible with the official Flutter plugins and others. Therefore, developers can use these plugins like other platforms (Android, iOS, etc.).
 
-| Package  | Original package |
-| -------- | ---------------- |
+| Package for eLinux | Frontend package |
+| ------------------ | ---------------- |
 | [video_player_elinux](packages/video_player) | [video_player](https://github.com/flutter/plugins/tree/master/packages/video_player) |
 | [camera_elinux](packages/camera) | [camera](https://github.com/flutter/plugins/tree/master/packages/camera) |
 | [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/plugins/tree/master/packages/path_provider) |
@@ -24,6 +24,5 @@ For help getting started with Flutter for eLinux, view our online
 | Repo | Purpose |
 | ------------- | ------------- |
 | [flutter-elinux](https://github.com/sony/flutter-elinux) | Flutter tools for eLinux |
-| flutter-elinux-plugins | Flutter plugins for eLinux |
 | [flutter-embedded-linux](https://github.com/sony/flutter-embedded-linux) | eLinux embedding for Flutter |
 | [meta-flutter](https://github.com/sony/meta-flutter) | Yocto recipes of eLinux embedding for Flutter |
