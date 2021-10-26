@@ -33,7 +33,7 @@ class _App extends StatelessWidget {
             tabs: <Widget>[
               Tab(
                 icon: Icon(Icons.cloud),
-                text: "Remote",
+                text: 'Remote',
               ),
             ],
           ),
@@ -109,7 +109,7 @@ class _ControlsOverlay extends StatelessWidget {
   const _ControlsOverlay({Key? key, required this.controller})
       : super(key: key);
 
-  static const _examplePlaybackRates = [
+  static const List<double> _examplePlaybackRates = [
     0.25,
     0.5,
     1.0,
@@ -127,13 +127,13 @@ class _ControlsOverlay extends StatelessWidget {
     return Stack(
       children: <Widget>[
         AnimatedSwitcher(
-          duration: Duration(milliseconds: 50),
-          reverseDuration: Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 50),
+          reverseDuration: const Duration(milliseconds: 200),
           child: controller.value.isPlaying
-              ? SizedBox.shrink()
+              ? const SizedBox.shrink()
               : Container(
                   color: Colors.black26,
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.play_arrow,
                       color: Colors.white,
@@ -157,7 +157,7 @@ class _ControlsOverlay extends StatelessWidget {
             },
             itemBuilder: (context) {
               return [
-                for (final speed in _examplePlaybackRates)
+                for (final double speed in _examplePlaybackRates)
                   PopupMenuItem(
                     value: speed,
                     child: Text('${speed}x'),
