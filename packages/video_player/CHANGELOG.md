@@ -1,3 +1,6 @@
+## 0.9.5
+* Fix missing include.
+
 ## 0.9.4
 * Upgrade video_player_platform_interface from 4.1.0 to 4.2.0.
 * Refactor example source code.
