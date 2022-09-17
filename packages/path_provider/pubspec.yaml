@@ -2,11 +2,11 @@ name: path_provider_elinux
 description: eLinux implementation of the path_provider plugin
 homepage: https://github.com/sony/flutter-elinux-plugins
 repository: https://github.com/sony/flutter-elinux-plugins/tree/main/packages/path_provider
-version: 1.0.1
+version: 1.0.2
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.0.0"
+  flutter: ">=2.10.0"
 
 flutter:
   plugin:
