@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Corporation. All rights reserved.
+// Copyright 2022 Sony Corporation. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -12,8 +12,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-// todo: Supports other types besides int, string.
 
 namespace commandline {
 
@@ -39,30 +37,49 @@ class CommandOptions {
   CommandOptions() = default;
   ~CommandOptions() = default;
 
-  void AddWithoutValue(const std::string& name, const std::string& short_name,
-                       const std::string& description, bool required) {
+  void AddWithoutValue(const std::string& name,
+                       const std::string& short_name,
+                       const std::string& description,
+                       bool required) {
     Add<std::string, ReaderString>(name, short_name, description, "",
                                    ReaderString(), required, false);
   }
 
-  void AddInt(const std::string& name, const std::string& short_name,
-              const std::string& description, const int& default_value,
+  void AddInt(const std::string& name,
+              const std::string& short_name,
+              const std::string& description,
+              const int& default_value,
               bool required) {
     Add<int, ReaderInt>(name, short_name, description, default_value,
                         ReaderInt(), required, true);
   }
 
-  void AddString(const std::string& name, const std::string& short_name,
+  void AddDouble(const std::string& name,
+              const std::string& short_name,
+              const std::string& description,
+              const double& default_value,
+              bool required) {
+    Add<double, ReaderDouble>(name, short_name, description, default_value,
+                        ReaderDouble(), required, true);
+  }
+
+  void AddString(const std::string& name,
+                 const std::string& short_name,
                  const std::string& description,
-                 const std::string& default_value, bool required) {
+                 const std::string& default_value,
+                 bool required) {
     Add<std::string, ReaderString>(name, short_name, description, default_value,
                                    ReaderString(), required, true);
   }
 
   template <typename T, typename F>
-  void Add(const std::string& name, const std::string& short_name,
-           const std::string& description, const T default_value,
-           F reader = F(), bool required = true, bool required_value = true) {
+  void Add(const std::string& name,
+           const std::string& short_name,
+           const std::string& description,
+           const T default_value,
+           F reader = F(),
+           bool required = true,
+           bool required_value = true) {
     if (options_.find(name) != options_.end()) {
       std::cerr << "Already registered option: " << name << std::endl;
       return;
@@ -213,7 +230,7 @@ class CommandOptions {
       }
 
       size_t index_adjust = 0;
-      constexpr int kSpacerNum = 5;
+      constexpr int kSpacerNum = 10;
       auto need_value = registration_order_options_[i]->IsRequiredValue();
       ostream << kOptionStyleNormal
               << registration_order_options_[i]->GetName();
@@ -240,10 +257,17 @@ class CommandOptions {
     std::string operator()(const std::string& value) { return value; }
   };
 
+  struct ReaderDouble {
+    double operator()(const std::string& value) { return std::stod(value); }
+  };
+
   class Option {
    public:
-    Option(const std::string& name, const std::string& short_name,
-           const std::string& description, bool required, bool required_value)
+    Option(const std::string& name,
+           const std::string& short_name,
+           const std::string& description,
+           bool required,
+           bool required_value)
         : name_(name),
           short_name_(short_name),
           description_(description),
@@ -288,9 +312,12 @@ class CommandOptions {
   template <typename T>
   class OptionValue : public Option {
    public:
-    OptionValue(const std::string& name, const std::string& short_name,
-                const std::string& description, const T& default_value,
-                bool required, bool required_value)
+    OptionValue(const std::string& name,
+                const std::string& short_name,
+                const std::string& description,
+                const T& default_value,
+                bool required,
+                bool required_value)
         : Option(name, short_name, description, required, required_value),
           default_value_(default_value),
           value_(default_value){};
@@ -316,10 +343,18 @@ class CommandOptions {
   template <typename T, typename F>
   class OptionValueReader : public OptionValue<T> {
    public:
-    OptionValueReader(const std::string& name, const std::string& short_name,
-                      const std::string& description, const T default_value,
-                      F reader, bool required, bool required_value)
-        : OptionValue<T>(name, short_name, description, default_value, required,
+    OptionValueReader(const std::string& name,
+                      const std::string& short_name,
+                      const std::string& description,
+                      const T default_value,
+                      F reader,
+                      bool required,
+                      bool required_value)
+        : OptionValue<T>(name,
+                         short_name,
+                         description,
+                         default_value,
+                         required,
                          required_value),
           reader_(reader) {}
     ~OptionValueReader() = default;
