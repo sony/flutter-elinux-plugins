@@ -3,9 +3,9 @@ description: Demonstrates how to use the joystick plugin for eLinux.
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=2.10.0"
 
 dependencies:
-  cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
   joystick:
