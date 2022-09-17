@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 project(runner LANGUAGES CXX)
 
-set(BINARY_NAME "example")
+set(BINARY_NAME "shared_preferences_elinux_example")
 
 cmake_policy(SET CMP0063 NEW)
 
