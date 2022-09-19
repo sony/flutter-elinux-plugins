@@ -1,4 +1,4 @@
-## 0.2.0
+## 0.2.1
 * Update for camera v0.10.0+1 / flutter 3.3.0 release
 
 ## 0.2.0
