@@ -46,7 +46,6 @@ camerabin viewfinder-sink="imxvideoconvert_g2d ! video/x-raw,format=RGBA ! fakes
 ## Troubleshooting
 
 If you get the following error:
-
 ```Shell
 Wrong JPEG library version: library is 62, caller expects 80
 ```
