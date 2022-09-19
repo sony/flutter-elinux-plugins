@@ -1,3 +1,6 @@
+## 0.9.6
+* Update for video_player_platform_interface v5.1.1 / video_player v2.4.7 / flutter 3.3.0
+
 ## 0.9.5
 * Fix missing include.
 
