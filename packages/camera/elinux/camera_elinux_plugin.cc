@@ -288,26 +288,16 @@ void CameraPlugin::HandleInitializeCall(
 void CameraPlugin::HandleStartImageStreamCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-// TODO: Support StartImageStream API.
-#if 0
   event_channel_image_stream_ =
       std::make_unique<EventChannelImageStream>(plugin_registrar_);
   result->Success();
-#else
-  result->NotImplemented();
-#endif
 }
 
 void CameraPlugin::HandleStopImageStreamCall(
     const flutter::EncodableValue* message,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
-// TODO: Support StopImageStream API.
-#if 0
   event_channel_image_stream_ = nullptr;
   result->Success();
-#else
-  result->NotImplemented();
-#endif
 }
 
 void CameraPlugin::HandleGetMaxZoomLevelCall(
