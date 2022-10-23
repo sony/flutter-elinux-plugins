@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2022 Sony Group Corporation. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -83,6 +83,9 @@ class CameraPlugin : public flutter::Plugin {
   void HandleInitializeCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleTakePictureCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void HandleStartImageStreamCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
@@ -148,7 +151,7 @@ void CameraPlugin::HandleMethodCall(
   } else if (!method_name.compare(kCameraChannelApiInitialize)) {
     HandleInitializeCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiTakePicture)) {
-    result->NotImplemented();
+    HandleTakePictureCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiPrepareForVideoRecording)) {
     result->NotImplemented();
   } else if (!method_name.compare(kCameraChannelApiStartVideoRecording)) {
@@ -283,6 +286,26 @@ void CameraPlugin::HandleInitializeCall(
     method_channel_device_->SendDeviceOrientationChangeEvent(orientation);
   }
   result->Success();
+}
+
+void CameraPlugin::HandleTakePictureCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+  camera_->TakePicture([p_result = result.release()](
+                           const std::string& captured_file_path) {
+    if (!captured_file_path.empty()) {
+      flutter::EncodableValue value(captured_file_path);
+      p_result->Success(value);
+    } else {
+      p_result->Error("Failed to capture", "Failed to capture a camera image");
+    }
+    delete p_result;
+  });
 }
 
 void CameraPlugin::HandleStartImageStreamCall(
