@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2022 Sony Group Corporation. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -75,6 +75,19 @@ bool GstCamera::Stop() {
     return false;
   }
   return true;
+}
+
+void GstCamera::TakePicture(OnNotifyCaptured on_notify_captured) {
+  if (!gst_.camerabin) {
+    std::cerr << "Failed to take a picture" << std::endl;
+    return;
+  }
+
+  on_notify_captured_ = on_notify_captured;
+  std::string filename =
+      g_strdup_printf("captured_%04u.jpg", captured_count_++);
+  g_object_set(gst_.camerabin, "location", filename.c_str(), NULL);
+  g_signal_emit_by_name(gst_.camerabin, "start-capture", NULL);
 }
 
 bool GstCamera::SetZoomLevel(float zoom) {
@@ -280,6 +293,18 @@ void GstCamera::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
 gboolean GstCamera::HandleGstMessage(GstBus* bus, GstMessage* message,
                                      gpointer user_data) {
   switch (GST_MESSAGE_TYPE(message)) {
+    case GST_MESSAGE_ELEMENT: {
+      auto const* st = gst_message_get_structure(message);
+      if (st) {
+        auto* self = reinterpret_cast<GstCamera*>(user_data);
+        if (gst_structure_has_name(st, "image-done") &&
+            self->on_notify_captured_) {
+          auto const* filename = gst_structure_get_string(st, "filename");
+          self->on_notify_captured_(filename);
+        }
+      }
+      break;
+    }
     case GST_MESSAGE_WARNING: {
       gchar* debug;
       GError* error;

@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2022 Sony Group Corporation. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,6 +7,7 @@
 
 #include <gst/gst.h>
 
+#include <functional>
 #include <memory>
 #include <shared_mutex>
 #include <string>
@@ -15,6 +16,9 @@
 
 class GstCamera {
  public:
+  using OnNotifyCaptured =
+      std::function<void(const std::string& captured_file_path)>;
+
   GstCamera(std::unique_ptr<CameraStreamHandler> handler);
   ~GstCamera();
 
@@ -24,6 +28,8 @@ class GstCamera {
   bool Play();
   bool Pause();
   bool Stop();
+
+  void TakePicture(OnNotifyCaptured on_notify_captured);
 
   bool SetZoomLevel(float zoom);
   float GetMaxZoomLevel() const { return max_zoom_level_; };
@@ -59,10 +65,13 @@ class GstCamera {
   int32_t width_ = -1;
   int32_t height_ = -1;
   std::shared_mutex mutex_buffer_;
-  std::unique_ptr<CameraStreamHandler> stream_handler_;
+  std::unique_ptr<CameraStreamHandler> stream_handler_ = nullptr;
   float max_zoom_level_;
   float min_zoom_level_;
   float zoom_level_ = 1.0f;
+  int captured_count_ = 0;
+
+  OnNotifyCaptured on_notify_captured_ = nullptr;
 };
 
 #endif  // PACKAGES_CAMERA_CAMERA_ELINUX_GST_CAMERA_H_
