@@ -18,6 +18,21 @@ GstVideoPlayer::GstVideoPlayer(
   gst_.buffer = nullptr;
 
   uri_ = ParseUri(uri);
+
+  // Code to increase Gst plugin rank, should be used to force using particular plugin
+  // GstRegistry *registry = NULL;
+  // GstElementFactory *factory = NULL;
+
+  // registry = gst_registry_get ();
+  // if (!registry) return;
+
+  // factory = gst_element_factory_find ("vaapidecode");
+  // if (!factory) printf("%s","factory fail");
+
+  // gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), GST_RANK_PRIMARY + 1);
+
+  // gst_registry_add_feature (registry, GST_PLUGIN_FEATURE (factory));
+
   if (!CreatePipeline()) {
     std::cerr << "Failed to create a pipeline" << std::endl;
     DestroyPipeline();
@@ -51,6 +66,7 @@ bool GstVideoPlayer::Play() {
     std::cerr << "Failed to change the state to PLAYING" << std::endl;
     return false;
   }
+  // GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(gst_.pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
   return true;
 }
 
@@ -187,12 +203,23 @@ bool GstVideoPlayer::CreatePipeline() {
     std::cerr << "Failed to create a pipeline" << std::endl;
     return false;
   }
-  gst_.playbin = gst_element_factory_make("playbin", "playbin");
+  gst_.playbin = gst_element_factory_make("playbin3", "playbin");
   if (!gst_.playbin) {
     std::cerr << "Failed to create a source" << std::endl;
     return false;
   }
-  gst_.video_convert = gst_element_factory_make("videoconvert", "videoconvert");
+
+  std::string converter {"videoconvert"};
+  std::string vendor {std::getenv("GPU_VENDOR")};
+
+  if ( vendor == "Intel" ){
+    converter = "vaapipostproc";
+  } else if ( vendor == "Nvidia" ) {
+    // Might need additional cudadownload in pipe
+    converter = "cudaconvert";
+  }
+
+  gst_.video_convert = gst_element_factory_make(converter.c_str(), "videoconvert");
   if (!gst_.video_convert) {
     std::cerr << "Failed to create a videoconvert" << std::endl;
     return false;
