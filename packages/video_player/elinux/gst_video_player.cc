@@ -19,6 +19,7 @@ GstVideoPlayer::GstVideoPlayer(
 
   uri_ = ParseUri(uri);
 
+  printf("%s\n","GstPLayer");
   // Code to increase Gst plugin rank, should be used to force using particular plugin
   // GstRegistry *registry = NULL;
   // GstElementFactory *factory = NULL;
@@ -210,13 +211,15 @@ bool GstVideoPlayer::CreatePipeline() {
   }
 
   std::string converter {"videoconvert"};
-  std::string vendor {std::getenv("GPU_VENDOR")};
-
-  if ( vendor == "Intel" ){
-    converter = "vaapipostproc";
-  } else if ( vendor == "Nvidia" ) {
-    // Might need additional cudadownload in pipe
-    converter = "cudaconvert";
+  auto vendor = std::getenv("GPU_VENDOR");
+  if (vendor)
+  {
+    if ( strcmp(vendor, "Intel") == 0 ){
+      converter = "vaapipostproc";
+    } else if ( strcmp(vendor, "Nvidia") == 0 ) {
+      // Might need additional cudadownload in pipe
+      converter = "cudaconvert";
+    }
   }
 
   gst_.video_convert = gst_element_factory_make(converter.c_str(), "videoconvert");

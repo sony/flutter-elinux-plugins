@@ -298,14 +298,23 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
           [instance = instance.get()](
               size_t width, size_t height) -> const FlutterDesktopPixelBuffer* {
-            instance->buffer->width = instance->player->GetWidth();
-            instance->buffer->height = instance->player->GetHeight();
-            instance->buffer->buffer = instance->player->GetFrameBuffer();
+                  printf("%s\n","Texture!");
+                if (instance->player)
+                {
+                  instance->buffer->width = instance->player->GetWidth();
+                  instance->buffer->height = instance->player->GetHeight();
+                  instance->buffer->buffer = instance->player->GetFrameBuffer();
+                }
+                else
+                {
+                  printf("%s\n","ERROR: player is nullptr!");
+                }
             return instance->buffer.get();
           }));
   const auto texture_id =
       texture_registrar_->RegisterTexture(instance->texture.get());
   instance->texture_id = texture_id;
+
   {
     auto event_channel =
         std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
@@ -333,6 +342,7 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
     event_channel->SetStreamHandler(std::move(event_channel_handler));
     instance->event_channel = std::move(event_channel);
   }
+
   {
     auto player_handler = std::make_unique<VideoPlayerStreamHandlerImpl>(
         // OnNotifyInitialized
