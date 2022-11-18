@@ -299,7 +299,7 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
           [instance = instance.get()](
               size_t width, size_t height) -> const FlutterDesktopPixelBuffer* {
                   printf("%s\n","Texture!");
-                if (instance->player)
+                if (instance && instance->player)
                 {
                   instance->buffer->width = instance->player->GetWidth();
                   instance->buffer->height = instance->player->GetHeight();
