@@ -19,7 +19,6 @@ GstVideoPlayer::GstVideoPlayer(
 
   uri_ = ParseUri(uri);
 
-  printf("%s\n","GstPLayer");
   // Code to increase Gst plugin rank, should be used to force using particular plugin
   // GstRegistry *registry = NULL;
   // GstElementFactory *factory = NULL;

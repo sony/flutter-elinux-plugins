@@ -298,18 +298,17 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
           [instance = instance.get()](
               size_t width, size_t height) -> const FlutterDesktopPixelBuffer* {
-                  printf("%s\n","Texture!");
-                if (instance && instance->player)
-                {
+                if (!instance)
+                  return nullptr;
+
+                if (instance->player) {
                   instance->buffer->width = instance->player->GetWidth();
                   instance->buffer->height = instance->player->GetHeight();
                   instance->buffer->buffer = instance->player->GetFrameBuffer();
-                }
-                else
-                {
+                } else {
                   printf("%s\n","ERROR: player is nullptr!");
                 }
-            return instance->buffer.get();
+                return instance->buffer.get();
           }));
   const auto texture_id =
       texture_registrar_->RegisterTexture(instance->texture.get());
