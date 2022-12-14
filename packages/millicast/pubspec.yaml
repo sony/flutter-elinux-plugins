@@ -1,0 +1,19 @@
+name: millicast
+description: Millicast publisher plugin
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: '>=2.18.4 <3.0.0'
+  flutter: ">=2.5.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+
+flutter:
+  plugin:
+    platforms:
+      elinux:
+        pluginClass: MillicastPlugin
