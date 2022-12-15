@@ -116,15 +116,15 @@ void MillicastPlugin::HandleMethodCall(
     
     result->Success(flutter::EncodableValue());
   } else if (method_call.method_name().compare(kMethodPrintAudioSrc) == 0) {
-    auto audio_src = millicast::Media::get_audio_sources();
-    std::cout << "Audio sources : " << std::endl;
+    // auto audio_src = millicast::Media::get_audio_sources();
+    // std::cout << "Audio sources : " << std::endl;
     // for (const auto & src : audio_src)
     //   std::cout << src->name() << std::endl;
     
     result->Success(flutter::EncodableValue());
   } else if (method_call.method_name().compare(kMethodPrintVideoSrc) == 0) {
-    auto video_src = millicast::Media::get_video_sources();
-    std::cout << "Video sources : " << std::endl;
+    // auto video_src = millicast::Media::get_video_sources();
+    // std::cout << "Video sources : " << std::endl;
     // for (const auto & src : video_src)
     //   std::cout << src->name() << std::endl;
     
@@ -185,13 +185,15 @@ void MillicastPlugin::HandleMethodCall(
     // { return src->name() == std::get<std::string>(audio_iter->second); });
 
     // if ( selected_iter != audio_src.end() ) {
-    //   auto audio_track = (*selected_iter)->start_capture();
-    //   publisher->add_track(audio_track);
-    // } else {
-    //   result->Error("Argument error",
-    //                 "Invalid audio source");
-    //   return;
-    // }
+      // auto audio_track = (*selected_iter)->start_capture();
+    if ( audio_src[0] ) {
+      auto audio_track = audio_src[0]->start_capture();
+      publisher->add_track(audio_track);
+    } else {
+      result->Error("Argument error",
+                    "Invalid audio source");
+      return;
+    }
 
     result->Success(flutter::EncodableValue());
   } else if (method_call.method_name().compare(kMethodSetVideoSrc) == 0) {
@@ -214,13 +216,15 @@ void MillicastPlugin::HandleMethodCall(
     // { return src->name() == std::get<std::string>(video_iter->second); });
 
     // if ( selected_iter != video_src.end() ) {
-    //   auto video_track = (*selected_iter)->start_capture();
-    //   publisher->add_track(video_track);
-    // } else {
-    //   result->Error("Argument error",
-    //                 "Invalid video source");
-    //   return;
-    // }
+      // auto video_track = (*selected_iter)->start_capture();
+    if ( video_src[0] ) {
+      auto video_track = video_src[0]->start_capture();
+      publisher->add_track(video_track);
+    } else {
+      result->Error("Argument error",
+                    "Invalid video source");
+      return;
+    }
     
     result->Success(flutter::EncodableValue());
   } else if (method_call.method_name().compare(kMethodPrintSuppAud) == 0) {
@@ -262,10 +266,10 @@ void MillicastPlugin::HandleMethodCall(
     millicast::Publisher::Option options;
     
     // auto audio_codecs = millicast::Client::get_supported_audio_codecs();
-    // auto audio_codec_str = std::get<std::string>(audio_iter->second);
+    auto audio_codec_str = std::get<std::string>(audio_iter->second);
     // auto audFindIter = std::find(audio_codecs.begin(), audio_codecs.end(), audio_codec_str);
     // if (audFindIter != audio_codecs.end())
-    //   options.codecs.audio = audio_codec_str;
+      options.codecs.audio = audio_codec_str;
     // else {
     //   result->Error("Argument error",
     //                 "Invalid audio_cdc argument provided");
@@ -273,10 +277,10 @@ void MillicastPlugin::HandleMethodCall(
     // }
 
     // auto video_codecs = millicast::Client::get_supported_video_codecs();
-    // auto video_codec_str = std::get<std::string>(video_iter->second);
+    auto video_codec_str = std::get<std::string>(video_iter->second);
     // auto vidFindIter = std::find(video_codecs.begin(), video_codecs.end(), video_codec_str);
     // if (vidFindIter != video_codecs.end() )
-    //   options.codecs.video = video_codec_str;
+      options.codecs.video = video_codec_str;
     // else {
     //   result->Error("Argument error",
     //                 "Invalid video_cdc argument provided");
