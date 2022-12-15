@@ -15,7 +15,7 @@
 namespace {
 
 // Methods
-constexpr char kMethodCreate[] = "create";
+constexpr char kMethodInit[] = "init";
 constexpr char kMethodPrintAudioSrc[] = "printAudioSrc";
 constexpr char kMethodPrintVideoSrc[] = "printVideoSrc";
 constexpr char kMethodSetСredentials[] = "setCredentials";
@@ -108,7 +108,7 @@ void MillicastPlugin::HandleMethodCall(
     std::ostringstream version_stream;
     version_stream << "eLinux";
     result->Success(flutter::EncodableValue(version_stream.str()));
-  } else if (method_call.method_name().compare(kMethodCreate) == 0) {
+  } else if (method_call.method_name().compare(kMethodInit) == 0) {
     publisher = millicast::Publisher::create();
     listener = std::make_unique<PubListener>(publisher.get());
 
