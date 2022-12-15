@@ -41,7 +41,7 @@ class _MyAppState extends State<MyApp> {
     await _millicastPlugin.setCredentials("", "", "");
     await _millicastPlugin.setAudioSrc("");
     await _millicastPlugin.setVideoSrc("");
-    await _millicastPlugin.setCodecs("H.264", "OPUS");
+    await _millicastPlugin.setCodecs("opus", "H264");
     await _millicastPlugin.connect();
 
     // If the widget was removed from the tree while the asynchronous platform
