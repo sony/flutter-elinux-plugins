@@ -26,4 +26,55 @@ abstract class MillicastPlatform extends PlatformInterface {
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
+
+  Future<void> init() async {
+    throw UnimplementedError('init() has not been implemented.');
+  }
+
+  Future<void> printAudioSrc() async {
+    throw UnimplementedError('printAudioSrc() has not been implemented.');
+  }
+
+  Future<void> printVideoSrc() async {
+    throw UnimplementedError('printVideoSrc() has not been implemented.');
+  }
+
+  Future<void> setCredentials(
+      String api_url, String stream_name, String token) async {
+    throw UnimplementedError(
+        'setCredentials(String api_url, String stream_name, String token) has not been implemented.');
+  }
+
+  Future<void> setAudioSrc(String audio_src) async {
+    throw UnimplementedError(
+        'setAudioSrc(String audio_src) has not been implemented.');
+  }
+
+  Future<void> setVideoSrc(String video_src) async {
+    throw UnimplementedError(
+        'setVideoSrc(String video_src) has not been implemented.');
+  }
+
+  Future<void> connect() async {
+    throw UnimplementedError('connect() has not been implemented.');
+  }
+
+  Future<void> printSupportedAudioCodecs() async {
+    throw UnimplementedError(
+        'printSupportedAudioCodecs() has not been implemented.');
+  }
+
+  Future<void> printSupportedVideoCodecs() async {
+    throw UnimplementedError(
+        'printSupportedVideoCodecs() has not been implemented.');
+  }
+
+  Future<void> setCodecs(String audio_cdc, String video_cdc) async {
+    throw UnimplementedError(
+        'setCodecs(String audio_cdc, String video_cdc) has not been implemented.');
+  }
+
+  Future<void> dispose() async {
+    throw UnimplementedError('dispose() has not been implemented.');
+  }
 }

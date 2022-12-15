@@ -31,11 +31,18 @@ class _MyAppState extends State<MyApp> {
     // Platform messages may fail, so we use a try/catch PlatformException.
     // We also handle the message potentially returning null.
     try {
-      platformVersion =
-          await _millicastPlugin.getPlatformVersion() ?? 'Unknown platform version';
+      platformVersion = await _millicastPlugin.getPlatformVersion() ??
+          'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
+
+    await _millicastPlugin.init();
+    await _millicastPlugin.setCredentials("", "", "");
+    await _millicastPlugin.setAudioSrc("");
+    await _millicastPlugin.setVideoSrc("");
+    await _millicastPlugin.setCodecs("H.264", "OPUS");
+    await _millicastPlugin.connect();
 
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
