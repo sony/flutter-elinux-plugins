@@ -19,20 +19,6 @@ GstVideoPlayer::GstVideoPlayer(
 
   uri_ = ParseUri(uri);
 
-  // Code to increase Gst plugin rank, should be used to force using particular plugin
-  // GstRegistry *registry = NULL;
-  // GstElementFactory *factory = NULL;
-
-  // registry = gst_registry_get ();
-  // if (!registry) return;
-
-  // factory = gst_element_factory_find ("vaapidecode");
-  // if (!factory) printf("%s","factory fail");
-
-  // gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), GST_RANK_PRIMARY + 1);
-
-  // gst_registry_add_feature (registry, GST_PLUGIN_FEATURE (factory));
-
   if (!CreatePipeline()) {
     std::cerr << "Failed to create a pipeline" << std::endl;
     DestroyPipeline();
@@ -52,6 +38,23 @@ GstVideoPlayer::GstVideoPlayer(
 GstVideoPlayer::~GstVideoPlayer() {
   Stop();
   DestroyPipeline();
+}
+
+// Code to increase Gst plugin rank, should be used to force using particular plugin
+void GstVideoPlayer::IncreasePluginRank(const std::string & element)
+{
+  GstRegistry *registry = NULL;
+  GstElementFactory *factory = NULL;
+
+  registry = gst_registry_get ();
+  if (!registry) return;
+
+  factory = gst_element_factory_find (element.c_str());
+  if (!factory) printf("%s","factory fail");
+
+  gst_plugin_feature_set_rank (GST_PLUGIN_FEATURE (factory), GST_RANK_PRIMARY + 100);
+
+  gst_registry_add_feature (registry, GST_PLUGIN_FEATURE (factory));
 }
 
 // static
@@ -198,6 +201,28 @@ const uint8_t* GstVideoPlayer::GetFrameBuffer() {
 // $ playbin uri=<file> video-sink="videoconvert ! video/x-raw,format=RGBA !
 // fakesink"
 bool GstVideoPlayer::CreatePipeline() {
+  std::string converter {"videoconvert"};
+  std::string capsStr {"video/x-raw,format=RGBA"};
+  auto vendor = std::getenv("GPU_VENDOR");
+  if (vendor)
+  {
+    if ( strcmp(vendor, "Intel") == 0 ){
+      converter = "vapostproc";
+      capsStr = "video/x-raw(memory:DMABuf),format=RGBA";
+      // We need va plugin to be able to use DMABuf
+      IncreasePluginRank("vah264dec");
+      IncreasePluginRank("vah265dec");
+      IncreasePluginRank("vapostproc");
+      IncreasePluginRank("vadeinterlace");
+      IncreasePluginRank("vampeg2dec");
+      IncreasePluginRank("vavp8dec");
+      IncreasePluginRank("vavp9dec");
+    } else if ( strcmp(vendor, "Nvidia") == 0 ) {
+      // Might need additional cudadownload in pipe
+      converter = "cudaconvert";
+    }
+  }
+
   gst_.pipeline = gst_pipeline_new("pipeline");
   if (!gst_.pipeline) {
     std::cerr << "Failed to create a pipeline" << std::endl;
@@ -207,18 +232,6 @@ bool GstVideoPlayer::CreatePipeline() {
   if (!gst_.playbin) {
     std::cerr << "Failed to create a source" << std::endl;
     return false;
-  }
-
-  std::string converter {"videoconvert"};
-  auto vendor = std::getenv("GPU_VENDOR");
-  if (vendor)
-  {
-    if ( strcmp(vendor, "Intel") == 0 ){
-      converter = "vaapipostproc";
-    } else if ( strcmp(vendor, "Nvidia") == 0 ) {
-      // Might need additional cudadownload in pipe
-      converter = "cudaconvert";
-    }
   }
 
   gst_.video_convert = gst_element_factory_make(converter.c_str(), "videoconvert");
@@ -252,7 +265,7 @@ bool GstVideoPlayer::CreatePipeline() {
                    NULL);
 
   // Adds caps to the converter to convert the color format to RGBA.
-  auto* caps = gst_caps_from_string("video/x-raw,format=RGBA");
+  auto* caps = gst_caps_from_string(capsStr.c_str());
   auto link_ok =
       gst_element_link_filtered(gst_.video_convert, gst_.video_sink, caps);
   gst_caps_unref(caps);
