@@ -69,7 +69,7 @@ bool GstVideoPlayer::Play() {
     std::cerr << "Failed to change the state to PLAYING" << std::endl;
     return false;
   }
-  // GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(gst_.pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
+  GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(gst_.pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
   return true;
 }
 
