@@ -19,6 +19,8 @@ GstVideoPlayer::GstVideoPlayer(
 
   uri_ = ParseUri(uri);
 
+  is_stream_ = IsStreamUri(uri_);
+
   if (!CreatePipeline()) {
     std::cerr << "Failed to create a pipeline" << std::endl;
     DestroyPipeline();
@@ -38,6 +40,13 @@ GstVideoPlayer::GstVideoPlayer(
 GstVideoPlayer::~GstVideoPlayer() {
   Stop();
   DestroyPipeline();
+}
+
+
+bool GstVideoPlayer::IsStreamUri(const std::string &uri) const
+{
+  return regex_match(uri, GstVideoPlayer::stream_type_regex_)
+        || regex_match(uri, GstVideoPlayer::stream_ext_regex_);
 }
 
 // Code to increase Gst plugin rank, should be used to force using particular plugin
@@ -102,6 +111,9 @@ bool GstVideoPlayer::SetVolume(double volume) {
 }
 
 bool GstVideoPlayer::SetPlaybackRate(double rate) {
+  if (is_stream_)
+    return false;
+
   if (!gst_.playbin) {
     return false;
   }
@@ -133,6 +145,9 @@ bool GstVideoPlayer::SetPlaybackRate(double rate) {
 }
 
 bool GstVideoPlayer::SetSeek(int64_t position) {
+  if (is_stream_)
+    return false;
+
   auto nanosecond = position * 1000 * 1000;
   if (!gst_element_seek(
           gst_.pipeline, playback_rate_, GST_FORMAT_TIME,
@@ -146,6 +161,9 @@ bool GstVideoPlayer::SetSeek(int64_t position) {
 }
 
 int64_t GstVideoPlayer::GetDuration() {
+  if (is_stream_)
+    return 0;
+
   GstFormat fmt = GST_FORMAT_TIME;
   int64_t duration_msec;
   if (!gst_element_query_duration(gst_.pipeline, fmt, &duration_msec)) {
@@ -158,6 +176,9 @@ int64_t GstVideoPlayer::GetDuration() {
 
 int64_t GstVideoPlayer::GetCurrentPosition() {
   gint64 position = 0;
+
+  if (is_stream_)
+    return position;
 
   // Sometimes we get an error when playing streaming videos.
   if (!gst_element_query_position(gst_.pipeline, GST_FORMAT_TIME, &position)) {

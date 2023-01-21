@@ -60,7 +60,8 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.network(
-      'https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_cropped_multilingual.webm',
+      // 'rtp://127.0.0.1:5005',
+      'http://sample.vodobox.net/skate_phantom_flex_4k/4k/skate_phantom_flex_4k_8288_2160p.m3u8',
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
 
@@ -94,7 +95,7 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
                   VideoPlayer(_controller),
                   ClosedCaption(text: _controller.value.caption.text),
                   _ControlsOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                  // VideoProgressIndicator(_controller, allowScrubbing: true),
                 ],
               ),
             ),
