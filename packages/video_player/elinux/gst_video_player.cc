@@ -35,6 +35,9 @@ GstVideoPlayer::GstVideoPlayer(
 }
 
 GstVideoPlayer::~GstVideoPlayer() {
+#ifdef USE_EGL_IMAGE_DMABUF
+  UnrefEGLImage();
+#endif  // USE_EGL_IMAGE_DMABUF
   Stop();
   DestroyPipeline();
 }
@@ -166,6 +169,45 @@ int64_t GstVideoPlayer::GetCurrentPosition() {
 
   return position / GST_MSECOND;
 }
+
+#ifdef USE_EGL_IMAGE_DMABUF
+void* GstVideoPlayer::GetEGLImage(void* egl_display, void* egl_context) {
+  std::shared_lock<std::shared_mutex> lock(mutex_buffer_);
+  if (!gst_.buffer) {
+    return nullptr;
+  }
+
+  GstMemory* memory = gst_buffer_peek_memory(gst_.buffer, 0);
+  if (gst_is_dmabuf_memory(memory)) {
+    UnrefEGLImage();
+
+    gint fd = gst_dmabuf_memory_get_fd(memory);
+    gst_gl_display_egl_ =
+        gst_gl_display_egl_new_with_egl_display(reinterpret_cast<gpointer>(egl_display));
+    gst_gl_ctx_ = gst_gl_context_new_wrapped(
+        GST_GL_DISPLAY_CAST(gst_gl_display_egl_), reinterpret_cast<guintptr>(egl_context),
+        GST_GL_PLATFORM_EGL, GST_GL_API_GLES2);
+
+    gst_gl_context_activate(gst_gl_ctx_, TRUE);
+
+    gst_egl_image_ =
+        gst_egl_image_from_dmabuf(gst_gl_ctx_, fd, &gst_video_info_, 0, 0);
+    return reinterpret_cast<void*>(gst_egl_image_get_image(gst_egl_image_));
+  }
+  return nullptr;
+}
+
+void GstVideoPlayer::UnrefEGLImage() {
+  if (gst_egl_image_) {
+    gst_egl_image_unref(gst_egl_image_);
+    gst_object_unref(gst_gl_ctx_);
+    gst_object_unref(gst_gl_display_egl_);
+    gst_egl_image_ = NULL;
+    gst_gl_ctx_ = NULL;
+    gst_gl_display_egl_ = NULL;
+  }
+}
+#endif  // USE_EGL_IMAGE_DMABUF
 
 const uint8_t* GstVideoPlayer::GetFrameBuffer() {
   std::shared_lock<std::shared_mutex> lock(mutex_buffer_);
@@ -346,6 +388,14 @@ void GstVideoPlayer::GetVideoSize(int32_t& width, int32_t& height) {
 
   gst_structure_get_int(structure, "width", &width);
   gst_structure_get_int(structure, "height", &height);
+
+#ifdef USE_EGL_IMAGE_DMABUF
+  gboolean res = gst_video_info_from_caps(&gst_video_info_, caps);
+  if (!res) {
+    std::cerr << "Failed to get a gst_video_info" << std::endl;
+    return;
+  }
+#endif  // USE_EGL_IMAGE_DMABUF
 }
 
 // static
