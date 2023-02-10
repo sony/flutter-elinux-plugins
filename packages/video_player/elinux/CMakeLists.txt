@@ -9,6 +9,9 @@ set(PLUGIN_NAME "video_player_elinux_plugin")
 find_package(PkgConfig)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
+if(USE_EGL_IMAGE_DMABUF)
+pkg_check_modules(GSTREAMER_GL REQUIRED gstreamer-gl-1.0)
+endif()
 
 add_library(${PLUGIN_NAME} SHARED
   "video_player_elinux_plugin.cc"
@@ -27,12 +30,24 @@ target_include_directories(${PLUGIN_NAME}
     ${GLIB_INCLUDE_DIRS}
     ${GSTREAMER_INCLUDE_DIRS}
 )
+if(USE_EGL_IMAGE_DMABUF)
+target_include_directories(${PLUGIN_NAME}
+  PRIVATE
+    ${GSTREAMER_GL_INCLUDE_DIRS}
+)
+endif()
 
 target_link_libraries(${PLUGIN_NAME}
   PRIVATE
     ${GLIB_LIBRARIES}
     ${GSTREAMER_LIBRARIES}
 )
+if(USE_EGL_IMAGE_DMABUF)
+target_link_libraries(${PLUGIN_NAME}
+  PRIVATE
+    ${GSTREAMER_GL_LIBRARIES}
+)
+endif()
 
 # List of absolute paths to libraries that should be bundled with the plugin
 set(video_player_elinux_bundled_libraries

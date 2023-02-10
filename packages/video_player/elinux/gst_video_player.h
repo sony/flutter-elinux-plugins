@@ -7,6 +7,13 @@
 
 #include <gst/gst.h>
 
+#ifdef USE_EGL_IMAGE_DMABUF
+#include <gst/allocators/gstdmabuf.h>
+#include <gst/gl/egl/egl.h>
+#include <gst/gl/gl.h>
+#include <gst/video/video.h>
+#endif  // USE_EGL_IMAGE_DMABUF
+
 #include <memory>
 #include <mutex>
 #include <shared_mutex>
@@ -33,6 +40,9 @@ class GstVideoPlayer {
   int64_t GetDuration();
   int64_t GetCurrentPosition();
   const uint8_t* GetFrameBuffer();
+#ifdef USE_EGL_IMAGE_DMABUF
+  void* GetEGLImage(void* egl_display, void* egl_context);
+#endif  // USE_EGL_IMAGE_DMABUF
   int32_t GetWidth() const { return width_; };
   int32_t GetHeight() const { return height_; };
 
@@ -56,6 +66,9 @@ class GstVideoPlayer {
   void DestroyPipeline();
   void Preroll();
   void GetVideoSize(int32_t& width, int32_t& height);
+#ifdef USE_EGL_IMAGE_DMABUF
+  void UnrefEGLImage();
+#endif  // USE_EGL_IMAGE_DMABUF
 
   GstVideoElements gst_;
   std::string uri_;
@@ -70,6 +83,13 @@ class GstVideoPlayer {
   std::mutex mutex_event_completed_;
   std::shared_mutex mutex_buffer_;
   std::unique_ptr<VideoPlayerStreamHandler> stream_handler_;
+
+#ifdef USE_EGL_IMAGE_DMABUF
+  GstVideoInfo gst_video_info_;
+  GstEGLImage* gst_egl_image_ = NULL;
+  GstGLContext* gst_gl_ctx_ = NULL;
+  GstGLDisplayEGL* gst_gl_display_egl_ = NULL;
+#endif  // USE_EGL_IMAGE_DMABUF
 };
 
 #endif  // PACKAGES_VIDEO_PLAYER_VIDEO_PLAYER_ELINUX_GST_VIDEO_PLAYER_H_

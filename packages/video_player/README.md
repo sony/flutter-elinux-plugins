@@ -44,3 +44,10 @@ playbin uri=<file> video-sink="videoconvert ! video/x-raw,format=RGBA ! fakesink
 
 #### e.g. customization for i.MX 8M platforms:
 playbin uri=<file> video-sink="imxvideoconvert_g2d ! video/x-raw,format=RGBA ! fakesink"
+
+### Enable GstEGLImage
+If GstEGLImage is enabled on your target device, adding the following code to `<user's project>/elinux/CMakeLists.txt` may improve playback performance.
+```
+add_definitions(-DUSE_EGL_IMAGE_DMABUF)
+set(USE_EGL_IMAGE_DMABUF "on")
+```

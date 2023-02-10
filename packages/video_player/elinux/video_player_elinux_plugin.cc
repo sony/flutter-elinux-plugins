@@ -86,6 +86,9 @@ class VideoPlayerPlugin : public flutter::Plugin {
     std::unique_ptr<GstVideoPlayer> player;
     std::unique_ptr<flutter::TextureVariant> texture;
     std::unique_ptr<FlutterDesktopPixelBuffer> buffer;
+#ifdef USE_EGL_IMAGE_DMABUF
+    std::unique_ptr<FlutterDesktopEGLImage> egl_image;
+#endif  // USE_EGL_IMAGE_DMABUF
     std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>>
         event_channel;
     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> event_sink;
@@ -293,6 +296,20 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
   }
 
   auto instance = std::make_unique<FlutterVideoPlayer>();
+#ifdef USE_EGL_IMAGE_DMABUF
+  instance->egl_image = std::make_unique<FlutterDesktopEGLImage>();
+  instance->texture =
+      std::make_unique<flutter::TextureVariant>(flutter::EGLImageTexture(
+          [instance = instance.get()](
+              size_t width, size_t height, void* egl_display,
+              void* egl_context) -> const FlutterDesktopEGLImage* {
+            instance->egl_image->width = instance->player->GetWidth();
+            instance->egl_image->height = instance->player->GetHeight();
+            instance->egl_image->egl_image =
+                instance->player->GetEGLImage(egl_display, egl_context);
+            return instance->egl_image.get();
+          }));
+#else
   instance->buffer = std::make_unique<FlutterDesktopPixelBuffer>();
   instance->texture =
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
@@ -303,6 +320,7 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
             instance->buffer->buffer = instance->player->GetFrameBuffer();
             return instance->buffer.get();
           }));
+#endif  // USE_EGL_IMAGE_DMABUF
   const auto texture_id =
       texture_registrar_->RegisterTexture(instance->texture.get());
   instance->texture_id = texture_id;
