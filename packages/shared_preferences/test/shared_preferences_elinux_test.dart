@@ -1,84 +1,280 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2023 Sony Group Corporation. All rights reserved.
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+import 'dart:convert';
+
 import 'package:file/memory.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider_elinux/path_provider_elinux.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:shared_preferences_elinux/shared_preferences_elinux.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:shared_preferences_platform_interface/types.dart';
 
 void main() {
   late MemoryFileSystem fs;
+  late PathProviderELinux pathProvider;
 
   SharedPreferencesELinux.registerWith();
 
+  const Map<String, Object> flutterTestValues = <String, Object>{
+    'flutter.String': 'hello world',
+    'flutter.Bool': true,
+    'flutter.Int': 42,
+    'flutter.Double': 3.14159,
+    'flutter.StringList': <String>['foo', 'bar'],
+  };
+
+  const Map<String, Object> prefixTestValues = <String, Object>{
+    'prefix.String': 'hello world',
+    'prefix.Bool': true,
+    'prefix.Int': 42,
+    'prefix.Double': 3.14159,
+    'prefix.StringList': <String>['foo', 'bar'],
+  };
+
+  const Map<String, Object> nonPrefixTestValues = <String, Object>{
+    'String': 'hello world',
+    'Bool': true,
+    'Int': 42,
+    'Double': 3.14159,
+    'StringList': <String>['foo', 'bar'],
+  };
+
+  final Map<String, Object> allTestValues = <String, Object>{};
+
+  allTestValues.addAll(flutterTestValues);
+  allTestValues.addAll(prefixTestValues);
+  allTestValues.addAll(nonPrefixTestValues);
+
   setUp(() {
     fs = MemoryFileSystem.test();
+    pathProvider = FakePathProviderELinux();
   });
 
-  Future<String> _getFilePath() async {
-    final pathProvider = PathProviderLinux();
-    final directory = await pathProvider.getApplicationSupportPath();
+  Future<String> getFilePath() async {
+    final String? directory = await pathProvider.getApplicationSupportPath();
     return path.join(directory!, 'shared_preferences.json');
   }
 
-  _writeTestFile(String value) async {
-    fs.file(await _getFilePath())
+  Future<void> writeTestFile(String value) async {
+    fs.file(await getFilePath())
       ..createSync(recursive: true)
       ..writeAsStringSync(value);
   }
 
-  Future<String> _readTestFile() async {
-    return fs.file(await _getFilePath()).readAsStringSync();
+  Future<String> readTestFile() async {
+    return fs.file(await getFilePath()).readAsStringSync();
   }
 
-  SharedPreferencesLinux _getPreferences() {
-    var prefs = SharedPreferencesLinux();
+  SharedPreferencesELinux getPreferences() {
+    final SharedPreferencesELinux prefs = SharedPreferencesELinux();
     prefs.fs = fs;
+    prefs.pathProvider = pathProvider;
     return prefs;
   }
 
   test('registered instance', () {
+    SharedPreferencesELinux.registerWith();
     expect(
-        SharedPreferencesStorePlatform.instance, isA<SharedPreferencesLinux>());
+        SharedPreferencesStorePlatform.instance, isA<SharedPreferencesELinux>());
   });
 
   test('getAll', () async {
-    await _writeTestFile('{"key1": "one", "key2": 2}');
-    var prefs = _getPreferences();
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
 
-    var values = await prefs.getAll();
-    expect(values, hasLength(2));
-    expect(values['key1'], 'one');
-    expect(values['key2'], 2);
+    final Map<String, Object> values = await prefs.getAll();
+    expect(values, hasLength(5));
+    expect(values, flutterTestValues);
+  });
+
+  test('getAllWithPrefix', () async {
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+
+    final Map<String, Object> values = await prefs.getAllWithPrefix('prefix.');
+    expect(values, hasLength(5));
+    expect(values, prefixTestValues);
+  });
+
+  test('getAllWithParameters', () async {
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+
+    final Map<String, Object> values = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: 'prefix.'),
+      ),
+    );
+    expect(values, hasLength(5));
+    expect(values, prefixTestValues);
+  });
+
+  test('getAllWithParameters with allow list', () async {
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+
+    final Map<String?, Object?> all = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(
+          prefix: 'prefix.',
+          allowList: <String>{'prefix.Bool'},
+        ),
+      ),
+    );
+    expect(all.length, 1);
+    expect(all['prefix.Bool'], prefixTestValues['prefix.Bool']);
   });
 
   test('remove', () async {
-    await _writeTestFile('{"key1":"one","key2":2}');
-    var prefs = _getPreferences();
+    await writeTestFile('{"key1":"one","key2":2}');
+    final SharedPreferencesELinux prefs = getPreferences();
 
     await prefs.remove('key2');
 
-    expect(await _readTestFile(), '{"key1":"one"}');
+    expect(await readTestFile(), '{"key1":"one"}');
   });
 
   test('setValue', () async {
-    await _writeTestFile('{}');
-    var prefs = _getPreferences();
+    await writeTestFile('{}');
+    final SharedPreferencesELinux prefs = getPreferences();
 
     await prefs.setValue('', 'key1', 'one');
     await prefs.setValue('', 'key2', 2);
 
-    expect(await _readTestFile(), '{"key1":"one","key2":2}');
+    expect(await readTestFile(), '{"key1":"one","key2":2}');
   });
 
   test('clear', () async {
-    await _writeTestFile('{"key1":"one","key2":2}');
-    var prefs = _getPreferences();
+    await writeTestFile(json.encode(flutterTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
 
+    expect(await readTestFile(), json.encode(flutterTestValues));
     await prefs.clear();
-    expect(await _readTestFile(), '{}');
+    expect(await readTestFile(), '{}');
   });
+
+  test('clearWithPrefix', () async {
+    await writeTestFile(json.encode(flutterTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+    await prefs.clearWithPrefix('prefix.');
+    final Map<String, Object> noValues =
+        await prefs.getAllWithPrefix('prefix.');
+    expect(noValues, hasLength(0));
+
+    final Map<String, Object> values = await prefs.getAll();
+    expect(values, hasLength(5));
+    expect(values, flutterTestValues);
+  });
+
+  test('getAllWithNoPrefix', () async {
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+
+    final Map<String, Object> values = await prefs.getAllWithPrefix('');
+    expect(values, hasLength(15));
+    expect(values, allTestValues);
+  });
+
+  test('clearWithNoPrefix', () async {
+    await writeTestFile(json.encode(flutterTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+    await prefs.clearWithPrefix('');
+    final Map<String, Object> noValues = await prefs.getAllWithPrefix('');
+    expect(noValues, hasLength(0));
+  });
+
+  test('clearWithParameters', () async {
+    await writeTestFile(json.encode(flutterTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+    await prefs.clearWithParameters(
+      ClearParameters(
+        filter: PreferencesFilter(prefix: 'prefix.'),
+      ),
+    );
+    final Map<String, Object> noValues = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: 'prefix.'),
+      ),
+    );
+    expect(noValues, hasLength(0));
+
+    final Map<String, Object> values = await prefs.getAll();
+    expect(values, hasLength(5));
+    expect(values, flutterTestValues);
+  });
+
+  test('clearWithParameters with allow list', () async {
+    await writeTestFile(json.encode(prefixTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+    await prefs.clearWithParameters(
+      ClearParameters(
+        filter: PreferencesFilter(
+          prefix: 'prefix.',
+          allowList: <String>{'prefix.StringList'},
+        ),
+      ),
+    );
+    final Map<String, Object> someValues = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: 'prefix.'),
+      ),
+    );
+    expect(someValues, hasLength(4));
+  });
+
+  test('getAllWithNoPrefix', () async {
+    await writeTestFile(json.encode(allTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+
+    final Map<String, Object> values = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: ''),
+      ),
+    );
+    expect(values, hasLength(15));
+    expect(values, allTestValues);
+  });
+
+  test('clearWithNoPrefix', () async {
+    await writeTestFile(json.encode(flutterTestValues));
+    final SharedPreferencesELinux prefs = getPreferences();
+    await prefs.clearWithParameters(
+      ClearParameters(
+        filter: PreferencesFilter(prefix: ''),
+      ),
+    );
+    final Map<String, Object> noValues = await prefs.getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: ''),
+      ),
+    );
+    expect(noValues, hasLength(0));
+  });
+}
+
+/// Fake implementation of PathProviderELinux that returns hard-coded paths,
+/// allowing tests to run on any platform.
+///
+/// Note that this should only be used with an in-memory filesystem, as the
+/// path it returns is a root path that does not actually exist on Linux.
+class FakePathProviderELinux extends PathProviderPlatform
+    implements PathProviderELinux {
+  @override
+  Future<String?> getApplicationSupportPath() async => r'/appsupport';
+
+  @override
+  Future<String?> getTemporaryPath() async => null;
+
+  @override
+  Future<String?> getLibraryPath() async => null;
+
+  @override
+  Future<String?> getApplicationDocumentsPath() async => null;
+
+  @override
+  Future<String?> getDownloadsPath() async => null;
 }

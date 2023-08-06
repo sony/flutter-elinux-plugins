@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2023 Sony Group Corporation. All rights reserved.
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -8,21 +8,26 @@ import 'dart:convert' show json;
 
 import 'package:file/file.dart';
 import 'package:file/local.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:path/path.dart' as path;
 import 'package:path_provider_elinux/path_provider_elinux.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
+import 'package:shared_preferences_platform_interface/types.dart';
 
 /// The Linux implementation of [SharedPreferencesStorePlatform].
 ///
 /// This class implements the `package:shared_preferences` functionality for Linux.
 class SharedPreferencesELinux extends SharedPreferencesStorePlatform {
-  /// The default instance of [SharedPreferencesELinux] to use.
+  /// Deprecated instance of [SharedPreferencesELinux].
+  /// Use [SharedPreferencesStorePlatform.instance] instead.
+  @Deprecated('Use `SharedPreferencesStorePlatform.instance` instead.')
   static SharedPreferencesELinux instance = SharedPreferencesELinux();
 
-  /// Registers the eLinux implementation.
+  static const String _defaultPrefix = 'flutter.';
+
+  /// Registers the ELinux implementation.
   static void registerWith() {
-    SharedPreferencesStorePlatform.instance = instance;
+    SharedPreferencesStorePlatform.instance = SharedPreferencesELinux();
   }
 
   /// Local copy of preferences
@@ -30,51 +35,60 @@ class SharedPreferencesELinux extends SharedPreferencesStorePlatform {
 
   /// File system used to store to disk. Exposed for testing only.
   @visibleForTesting
-  FileSystem fs = LocalFileSystem();
+  FileSystem fs = const LocalFileSystem();
+
+  /// The path_provider_elinux instance used to find the support directory.
+  @visibleForTesting
+  PathProviderELinux pathProvider = PathProviderELinux();
 
   /// Gets the file where the preferences are stored.
   Future<File?> _getLocalDataFile() async {
-    final pathProvider = PathProviderELinux();
-    final directory = await pathProvider.getApplicationSupportPath();
-    if (directory == null) return null;
+    final String? directory = await pathProvider.getApplicationSupportPath();
+    if (directory == null) {
+      return null;
+    }
     return fs.file(path.join(directory, 'shared_preferences.json'));
   }
 
-  /// Gets the preferences from the stored file. Once read, the preferences are
-  /// maintained in memory.
-  Future<Map<String, Object>> _readPreferences() async {
-    if (_cachedPreferences != null) {
-      return _cachedPreferences!;
-    }
-
-    Map<String, Object> preferences = {};
+  /// Gets the preferences from the stored file and saves them in cache.
+  Future<Map<String, Object>> _reload() async {
+    Map<String, Object> preferences = <String, Object>{};
     final File? localDataFile = await _getLocalDataFile();
     if (localDataFile != null && localDataFile.existsSync()) {
-      String stringMap = localDataFile.readAsStringSync();
+      final String stringMap = localDataFile.readAsStringSync();
       if (stringMap.isNotEmpty) {
-        preferences = json.decode(stringMap).cast<String, Object>();
+        final Object? data = json.decode(stringMap);
+        if (data is Map) {
+          preferences = data.cast<String, Object>();
+        }
       }
     }
     _cachedPreferences = preferences;
     return preferences;
   }
 
+  /// Checks for cached preferences and returns them or loads preferences from
+  /// file and returns and caches them.
+  Future<Map<String, Object>> _readPreferences() async {
+    return _cachedPreferences ?? await _reload();
+  }
+
   /// Writes the cached preferences to disk. Returns [true] if the operation
   /// succeeded.
   Future<bool> _writePreferences(Map<String, Object> preferences) async {
     try {
-      var localDataFile = await _getLocalDataFile();
+      final File? localDataFile = await _getLocalDataFile();
       if (localDataFile == null) {
-        print("Unable to determine where to write preferences.");
+        debugPrint('Unable to determine where to write preferences.');
         return false;
       }
       if (!localDataFile.existsSync()) {
         localDataFile.createSync(recursive: true);
       }
-      var stringMap = json.encode(preferences);
+      final String stringMap = json.encode(preferences);
       localDataFile.writeAsStringSync(stringMap);
     } catch (e) {
-      print("Error saving preferences to disk: $e");
+      debugPrint('Error saving preferences to disk: $e');
       return false;
     }
     return true;
@@ -82,26 +96,65 @@ class SharedPreferencesELinux extends SharedPreferencesStorePlatform {
 
   @override
   Future<bool> clear() async {
-    var preferences = await _readPreferences();
-    preferences.clear();
+    return clearWithParameters(
+      ClearParameters(
+        filter: PreferencesFilter(prefix: _defaultPrefix),
+      ),
+    );
+  }
+
+  @override
+  Future<bool> clearWithPrefix(String prefix) async {
+    return clearWithParameters(
+        ClearParameters(filter: PreferencesFilter(prefix: prefix)));
+  }
+
+  @override
+  Future<bool> clearWithParameters(ClearParameters parameters) async {
+    final PreferencesFilter filter = parameters.filter;
+    final Map<String, Object> preferences = await _readPreferences();
+    preferences.removeWhere((String key, _) =>
+        key.startsWith(filter.prefix) &&
+        (filter.allowList == null || filter.allowList!.contains(key)));
     return _writePreferences(preferences);
   }
 
   @override
   Future<Map<String, Object>> getAll() async {
-    return _readPreferences();
+    return getAllWithParameters(
+      GetAllParameters(
+        filter: PreferencesFilter(prefix: _defaultPrefix),
+      ),
+    );
+  }
+
+  @override
+  Future<Map<String, Object>> getAllWithPrefix(String prefix) async {
+    return getAllWithParameters(
+        GetAllParameters(filter: PreferencesFilter(prefix: prefix)));
+  }
+
+  @override
+  Future<Map<String, Object>> getAllWithParameters(
+      GetAllParameters parameters) async {
+    final PreferencesFilter filter = parameters.filter;
+    final Map<String, Object> withPrefix =
+        Map<String, Object>.from(await _readPreferences());
+    withPrefix.removeWhere((String key, _) => !(key.startsWith(filter.prefix) &&
+        (filter.allowList?.contains(key) ?? true)));
+    return withPrefix;
   }
 
   @override
   Future<bool> remove(String key) async {
-    var preferences = await _readPreferences();
+    final Map<String, Object> preferences = await _readPreferences();
     preferences.remove(key);
     return _writePreferences(preferences);
   }
 
   @override
   Future<bool> setValue(String valueType, String key, Object value) async {
-    var preferences = await _readPreferences();
+    final Map<String, Object> preferences = await _readPreferences();
     preferences[key] = value;
     return _writePreferences(preferences);
   }
