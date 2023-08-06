@@ -1,4 +1,4 @@
-// Copyright 2021 Sony Group Corporation. All rights reserved.
+// Copyright 2023 Sony Group Corporation. All rights reserved.
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -13,14 +13,18 @@ void main() {
 
 /// Sample app
 class MyApp extends StatefulWidget {
+  /// Default Constructor
+  const MyApp({super.key});
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
   String? _tempDirectory = 'Unknown';
   String? _downloadsDirectory = 'Unknown';
   String? _appSupportDirectory = 'Unknown';
+  String? _appCacheDirectory = 'Unknown';
   String? _documentsDirectory = 'Unknown';
   final PathProviderELinux _provider = PathProviderELinux();
 
@@ -35,33 +39,36 @@ class _MyAppState extends State<MyApp> {
     String? tempDirectory;
     String? downloadsDirectory;
     String? appSupportDirectory;
+    String? appCacheDirectory;
     String? documentsDirectory;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       tempDirectory = await _provider.getTemporaryPath();
-    } on PlatformException catch (e, stackTrace) {
+    } on PlatformException {
       tempDirectory = 'Failed to get temp directory.';
-      print('$tempDirectory $e $stackTrace');
     }
     try {
       downloadsDirectory = await _provider.getDownloadsPath();
-    } on PlatformException catch (e, stackTrace) {
+    } on PlatformException {
       downloadsDirectory = 'Failed to get downloads directory.';
-      print('$downloadsDirectory $e $stackTrace');
     }
 
     try {
       documentsDirectory = await _provider.getApplicationDocumentsPath();
-    } on PlatformException catch (e, stackTrace) {
+    } on PlatformException {
       documentsDirectory = 'Failed to get documents directory.';
-      print('$documentsDirectory $e $stackTrace');
     }
 
     try {
       appSupportDirectory = await _provider.getApplicationSupportPath();
-    } on PlatformException catch (e, stackTrace) {
+    } on PlatformException {
       appSupportDirectory = 'Failed to get documents directory.';
-      print('$appSupportDirectory $e $stackTrace');
+    }
+
+    try {
+      appCacheDirectory = await _provider.getApplicationCachePath();
+    } on PlatformException {
+      appCacheDirectory = 'Failed to get cache directory.';
     }
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
@@ -74,6 +81,7 @@ class _MyAppState extends State<MyApp> {
       _tempDirectory = tempDirectory;
       _downloadsDirectory = downloadsDirectory;
       _appSupportDirectory = appSupportDirectory;
+      _appCacheDirectory = appCacheDirectory;
       _documentsDirectory = documentsDirectory;
     });
   }
@@ -83,7 +91,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Path Provider eLinux example app'),
+          title: const Text('Path Provider Linux example app'),
         ),
         body: Center(
           child: Column(
@@ -92,6 +100,7 @@ class _MyAppState extends State<MyApp> {
               Text('Documents Directory: $_documentsDirectory\n'),
               Text('Downloads Directory: $_downloadsDirectory\n'),
               Text('Application Support Directory: $_appSupportDirectory\n'),
+              Text('Application Cache Directory: $_appCacheDirectory\n'),
             ],
           ),
         ),
