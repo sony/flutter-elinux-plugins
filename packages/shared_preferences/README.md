@@ -1,6 +1,6 @@
 # shared\_preferences\_elinux
 
-The eLinux implementation of [`shared_preferences`](https://github.com/flutter/plugins/tree/master/packages/shared_preferences).
+The eLinux implementation of [`shared_preferences`](https://github.com/flutter/packages/tree/main/packages/shared_preferences/shared_preferences).
 
 ## Usage
 

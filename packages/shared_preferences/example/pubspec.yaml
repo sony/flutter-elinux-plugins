@@ -3,17 +3,18 @@ description: Demonstrates how to use the shared_preferences_elinux plugin.
 publish_to: none
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.10.0"
+  sdk: ">=2.18.0 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
     sdk: flutter
   shared_preferences_elinux:
     path: ../
+  shared_preferences_platform_interface: ^2.3.0
 
 dev_dependencies:
-  flutter_driver:
+  flutter_test:
     sdk: flutter
   integration_test:
     sdk: flutter

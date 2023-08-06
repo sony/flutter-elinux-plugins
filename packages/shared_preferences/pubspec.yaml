@@ -2,11 +2,11 @@ name: shared_preferences_elinux
 description: eLinux implementation of the shared_preferences plugin
 homepage: https://github.com/sony/flutter-elinux-plugins
 repository: https://github.com/sony/flutter-elinux-plugins/tree/main/packages/shared_preferences
-version: 1.0.1
+version: 2.2.0
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.10.0"
+  sdk: ">=2.18.0 <4.0.0"
+  flutter: ">=3.3.0"
 
 flutter:
   plugin:
@@ -26,7 +26,7 @@ dependencies:
       url: https://github.com/sony/flutter-elinux-plugins.git
       path: packages/path_provider
       ref: main
-  shared_preferences_platform_interface: ^2.0.0
+  shared_preferences_platform_interface: ^2.3.0
 
 dev_dependencies:
   flutter_test:
