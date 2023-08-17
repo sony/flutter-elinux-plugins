@@ -16,7 +16,7 @@ The plugins for elinux are basically designed to be API compatible with the offi
 | Package for eLinux | Frontend package |
 | ------------------ | ---------------- |
 | [video_player_elinux](packages/video_player) | [video_player](https://github.com/flutter/plugins/tree/master/packages/video_player) |
-| [camera_elinux](packages/camera) | [camera](https://github.com/flutter/plugins/tree/master/packages/camera) |
+| [camera_elinux](packages/camera) | [camera](https://github.com/flutter/packages/tree/main/packages/camera/camera) |
 | [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/packages/tree/main/packages/path_provider) |
 | [shared_preferences_elinux](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/packages/tree/main/packages/shared_preferences) |
 | [joystick](packages/joystick) | - |

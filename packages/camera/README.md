@@ -19,7 +19,7 @@ $ sudo apt install libgstreamer-plugins-base1.0-dev \
 ### pubspec.yaml
 ```yaml
 dependencies:
-  camera: ^0.10.0+1
+  camera: ^0.10.5+3
   camera_elinux:
     git:
       url: https://github.com/sony/flutter-elinux-plugins.git
