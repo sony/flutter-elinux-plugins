@@ -1,53 +1,58 @@
-# This file was copied from flutter/plugins/.gitignore.
+# This file was copied from flutter/packages/.gitignore.
 
 .DS_Store
 .atom/
-.idea/
-.vscode/
-
+.idea
 .packages
 .pub/
 .dart_tool/
-pubspec.lock
-flutter_export_environment.sh
+.vscode/
+*.iml
 
-examples/all_plugins/pubspec.yaml
+# Gradle?
+.uuid
+
+pubspec.lock
 
 Podfile.lock
 Pods/
 .symlinks/
+
+*instrumentscli*.trace
+*.cipd
+
+# Build directories are produced when building using the Flutter CLI.
+build
+
+# This file is produced as a back-up when web_benchmarks fails to parse a
+# Chrome trace.
+chrome-trace.json
+
+# Generated files on example apps
+flutter_export_environment.sh
+.flutter-plugins*
+local.properties
+keystore.properties
+**/Flutter/Generated.xcconfig
 **/Flutter/App.framework/
 **/Flutter/ephemeral/
 **/Flutter/Flutter.podspec
 **/Flutter/Flutter.framework/
-**/Flutter/Generated.xcconfig
 **/Flutter/flutter_assets/
 
 ServiceDefinitions.json
 xcuserdata/
 **/DerivedData/
 
-local.properties
-keystore.properties
+generated_plugin_registrant.*
+GeneratedPluginRegistrant.*
+
+# Gradle 
+**/gradle-wrapper.jar
 .gradle/
 gradlew
 gradlew.bat
-gradle-wrapper.jar
-.flutter-plugins-dependencies
-*.iml
-
-generated_plugin_registrant.dart
-GeneratedPluginRegistrant.h
-GeneratedPluginRegistrant.m
-generated_plugin_registrant.cc
-GeneratedPluginRegistrant.java
-GeneratedPluginRegistrant.swift
-build/
-.flutter-plugins
 
 .project
 .classpath
 .settings
-
-# Downloaded by the plugin tools.
-google-java-format-1.3-all-deps.jar
