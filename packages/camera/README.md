@@ -28,20 +28,29 @@ dependencies:
 ```
 
 ### Source code
+
 Import `camera` in your Dart code:
 ```dart
 import 'package:camera/camera.dart';
 ```
 
-### Customize for your target devices
-If you this plugin on your target devices, you will need to customize the pipeline in the source file.So, replace the `videoconvert` element with a H/W accelerated element of your target device to perform well.
+### Customization for your target devices
+
+To improve the performance of this plugin, you will need to customize the pipeline in the source file. Please modify the source file and replace the `videoconvert` element with a H/W accelerated element of your target device to perform well.
+
+`bool GstCamera::CreatePipeline()` in packages/camera/elinux/gst_camera.cc
 
 #### default:
+
+```
 camerabin viewfinder-sink="videoconvert ! video/x-raw,format=RGBA ! fakesink"
+```
 
-#### e.g. customization for i.MX 8M platforms:
+#### i.MX 8M platforms:
+
+```
 camerabin viewfinder-sink="imxvideoconvert_g2d ! video/x-raw,format=RGBA ! fakesink"
-
+```
 
 ## Troubleshooting
 
