@@ -1,2 +1,11 @@
-# This file was copied from flutter/plugins/.clang-format.
+# This file was copied from flutter/packages/.clang-format
+
 BasedOnStyle: Google
+---
+Language: Cpp
+DerivePointerAlignment: false
+PointerAlignment: Left
+---
+Language: ObjC
+DerivePointerAlignment: false
+PointerAlignment: Right
