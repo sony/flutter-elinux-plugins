@@ -1,3 +1,6 @@
+## 0.3.1
+* Update for flutter official camera plugin v0.10.5+3
+
 ## 0.3.0
 * Add TakePicture API
 * Enable stream image APIs
