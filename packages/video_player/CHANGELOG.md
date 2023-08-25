@@ -1,3 +1,6 @@
+## 0.9.8
+* Update flutter/dart-sdk versions in environment for flutter 3.13.0.
+
 ## 0.9.7
 * Improve playback performance if GstEGLImage is avalable.
 

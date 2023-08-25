@@ -1,12 +1,12 @@
 name: video_player_elinux
 description: Flutter plugin for displaying inline video with other Flutter widgets on Embedded Linux.
-version: 0.9.7
+version: 0.9.8
 homepage: https://github.com/sony/flutter-elinux-plugins
 repository: https://github.com/sony/flutter-elinux-plugins/tree/main/packages/video_player
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.10.0"
+  sdk: ">=2.18.0 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
