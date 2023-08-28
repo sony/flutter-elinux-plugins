@@ -8,7 +8,7 @@
 #include <flutter/standard_method_codec.h>
 
 namespace {
-constexpr char kChannelName[] = "flutter.io/cameraPlugin/device";
+constexpr char kChannelName[] = "plugins.flutter.io/camera/fromPlatform";
 constexpr char kChannelMethodOrientationChanged[] = "orientation_changed";
 
 constexpr char kOrientation[] = "orientation";

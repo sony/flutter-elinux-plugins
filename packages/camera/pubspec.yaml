@@ -2,7 +2,7 @@ name: camera_elinux
 description: A Flutter plugin for getting information about and controlling the
   camera on eLinux. Supports previewing the camera feed, capturing images, capturing video,
   and streaming image buffers to dart.
-version: 0.3.1
+version: 0.3.2
 homepage: https://github.com/sony/flutter-elinux-plugins
 repository: https://github.com/sony/flutter-elinux-plugins/tree/main/packages/camera
 
@@ -11,6 +11,7 @@ environment:
   flutter: ">=3.3.0"
 
 dependencies:
+  camera_platform_interface: ^2.5.0
   flutter:
     sdk: flutter
 
@@ -19,3 +20,4 @@ flutter:
     platforms:
       elinux:
         pluginClass: CameraElinuxPlugin
+        dartPluginClass: ELinuxCamera

@@ -8,7 +8,7 @@
 #include <flutter/standard_method_codec.h>
 
 namespace {
-constexpr char kChannelName[] = "flutter.io/cameraPlugin/camera";
+constexpr char kChannelName[] = "plugins.flutter.io/camera/camera";
 constexpr char kChannelMethodInitialized[] = "initialized";
 };  // namespace
 

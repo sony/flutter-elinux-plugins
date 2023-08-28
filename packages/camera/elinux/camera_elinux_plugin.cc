@@ -86,6 +86,12 @@ class CameraPlugin : public flutter::Plugin {
   void HandleTakePictureCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleGetMinExposureOffsetCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleGetMaxExposureOffsetCall(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
   void HandleStartImageStreamCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
@@ -169,9 +175,9 @@ void CameraPlugin::HandleMethodCall(
   } else if (!method_name.compare(kCameraChannelApiSetExposurePoint)) {
     result->NotImplemented();
   } else if (!method_name.compare(kCameraChannelApiGetMinExposureOffset)) {
-    result->NotImplemented();
+    HandleGetMinExposureOffsetCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiGetMaxExposureOffset)) {
-    result->NotImplemented();
+    HandleGetMaxExposureOffsetCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiGetExposureOffsetStepSize)) {
     result->NotImplemented();
   } else if (!method_name.compare(kCameraChannelApiSetExposureOffset)) {
@@ -306,6 +312,34 @@ void CameraPlugin::HandleTakePictureCall(
     }
     delete p_result;
   });
+}
+
+void CameraPlugin::HandleGetMinExposureOffsetCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+
+  // TODO: Implement exposure control support
+  double value = 0.0;
+  result->Success(flutter::EncodableValue(value));
+}
+
+void CameraPlugin::HandleGetMaxExposureOffsetCall(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+
+  // TODO: Implement exposure control support
+  double value = 0.0;
+  result->Success(flutter::EncodableValue(value));
 }
 
 void CameraPlugin::HandleStartImageStreamCall(
