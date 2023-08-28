@@ -1,3 +1,6 @@
+## 0.3.2
+* Add ELinuxCamera (camera dartPluginClass for eLinux) for flutter 3.13.
+
 ## 0.3.1
 * Update for flutter official camera plugin v0.10.5+3
 
