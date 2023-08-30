@@ -131,7 +131,7 @@ bool GstVideoPlayer::SetSeek(int64_t position) {
 
 int64_t GstVideoPlayer::GetDuration() {
   GstFormat fmt = GST_FORMAT_TIME;
-  int64_t duration_msec;
+  gint64 duration_msec;
   if (!gst_element_query_duration(gst_.pipeline, fmt, &duration_msec)) {
     std::cerr << "Failed to get duration" << std::endl;
     return -1;
