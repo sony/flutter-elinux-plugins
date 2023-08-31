@@ -160,9 +160,10 @@ int64_t GstVideoPlayer::GetCurrentPosition() {
       is_completed_ = false;
       lock.unlock();
 
-      stream_handler_->OnNotifyCompleted();
       if (auto_repeat_) {
         SetSeek(0);
+      } else {
+        stream_handler_->OnNotifyCompleted();
       }
     }
   }
