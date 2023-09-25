@@ -1,3 +1,3 @@
 CompileFlags:
-  Add: [-I/home/talksik/code/opensource/flutter-elinux-plugins/packages/video_player/example/elinux/flutter/ephemeral/, -I/home/talksik/code/opensource/flutter-elinux-plugins/packages/video_player/example/elinux/flutter/ephemeral/cpp_client_wrapper/include, -I/usr/include/glib-2.0, -I/usr/lib/x86_64-linux-gnu/glib-2.0/include]
+  Add: [-I/usr/include/gstreamer-1.0, -I/home/talksik/code/opensource/flutter-elinux-plugins/packages/video_player/example/elinux/flutter/ephemeral/, -I/home/talksik/code/opensource/flutter-elinux-plugins/packages/video_player/example/elinux/flutter/ephemeral/cpp_client_wrapper/include, -I/usr/include/glib-2.0, -I/usr/lib/x86_64-linux-gnu/glib-2.0/include]
 

@@ -54,6 +54,8 @@ bool GstVideoPlayer::Play() {
     std::cerr << "Failed to change the state to PLAYING" << std::endl;
     return false;
   }
+
+  stream_handler_->OnNotifyPlaying(true);
   return true;
 }
 
@@ -63,6 +65,8 @@ bool GstVideoPlayer::Pause() {
     std::cerr << "Failed to change the state to PAUSED" << std::endl;
     return false;
   }
+
+  stream_handler_->OnNotifyPlaying(false);
   return true;
 }
 
@@ -72,6 +76,8 @@ bool GstVideoPlayer::Stop() {
     std::cerr << "Failed to change the state to READY" << std::endl;
     return false;
   }
+
+  stream_handler_->OnNotifyPlaying(false);
   return true;
 }
 
