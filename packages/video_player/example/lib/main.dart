@@ -65,12 +65,9 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
     );
 
     _controller.addListener(() {
-      debugPrint('is playing ${_controller.value.isPlaying}');
-      debugPrint('is complete: ${_controller.value.isCompleted}');
-
       setState(() {});
     });
-    _controller.setLooping(false);
+    _controller.setLooping(true);
     _controller.initialize();
   }
 
