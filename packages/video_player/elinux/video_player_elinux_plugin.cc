@@ -130,6 +130,7 @@ class VideoPlayerPlugin : public flutter::Plugin {
 
   void SendInitializedEventMessage(int64_t texture_id);
   void SendPlayCompletedEventMessage(int64_t texture_id);
+  void SendIsPlayingStateUpdate(int64_t texture_id, bool is_playing);
 
   flutter::EncodableValue WrapError(const std::string& message,
                                     const std::string& code = std::string(),
@@ -364,6 +365,9 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
         // OnNotifyCompleted
         [texture_id, host = this]() {
           host->SendPlayCompletedEventMessage(texture_id);
+        },
+        [texture_id, host = this](bool is_playing) {
+          host->SendIsPlayingStateUpdate(texture_id, is_playing);
         });
     instance->player =
         std::make_unique<GstVideoPlayer>(uri, std::move(player_handler));
@@ -594,6 +598,22 @@ void VideoPlayerPlugin::SendPlayCompletedEventMessage(int64_t texture_id) {
 
   flutter::EncodableMap encodables = {
       {flutter::EncodableValue("event"), flutter::EncodableValue("completed")}};
+  flutter::EncodableValue event(encodables);
+  players_[texture_id]->event_sink->Success(event);
+}
+
+void VideoPlayerPlugin::SendIsPlayingStateUpdate(int64_t texture_id,
+                                                 bool is_playing) {
+  if (players_.find(texture_id) == players_.end() ||
+      !players_[texture_id]->event_sink) {
+    return;
+  }
+
+  flutter::EncodableMap encodables = {
+      {flutter::EncodableValue("event"),
+       flutter::EncodableValue("isPlayingStateUpdate")},
+      {flutter::EncodableValue("isPlaying"),
+       flutter::EncodableValue(is_playing)}};
   flutter::EncodableValue event(encodables);
   players_[texture_id]->event_sink->Success(event);
 }

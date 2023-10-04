@@ -14,13 +14,16 @@ class VideoPlayerStreamHandlerImpl : public VideoPlayerStreamHandler {
   using OnNotifyInitialized = std::function<void()>;
   using OnNotifyFrameDecoded = std::function<void()>;
   using OnNotifyCompleted = std::function<void()>;
+  using OnNotifyPlaying = std::function<void(bool)>;
 
   VideoPlayerStreamHandlerImpl(OnNotifyInitialized on_notify_initialized,
                                OnNotifyFrameDecoded on_notify_frame_decoded,
-                               OnNotifyCompleted on_notify_completed)
+                               OnNotifyCompleted on_notify_completed,
+                               OnNotifyPlaying on_notify_playing)
       : on_notify_initialized_(on_notify_initialized),
         on_notify_frame_decoded_(on_notify_frame_decoded),
-        on_notify_completed_(on_notify_completed) {}
+        on_notify_completed_(on_notify_completed),
+        on_notify_playing_(on_notify_playing) {}
   virtual ~VideoPlayerStreamHandlerImpl() = default;
 
   // Prevent copying.
@@ -50,9 +53,16 @@ class VideoPlayerStreamHandlerImpl : public VideoPlayerStreamHandler {
     }
   }
 
+  void OnNotifyPlayingInternal(bool is_playing) {
+    if (on_notify_playing_) {
+      on_notify_playing_(is_playing);
+    }
+  }
+
   OnNotifyInitialized on_notify_initialized_;
   OnNotifyFrameDecoded on_notify_frame_decoded_;
   OnNotifyCompleted on_notify_completed_;
+  OnNotifyPlaying on_notify_playing_;
 };
 
 #endif  // PACKAGES_VIDEO_PLAYER_VIDEO_PLAYER_ELINUX_VIDEO_PLAYER_STREAM_HANDLER_IMPL_H_

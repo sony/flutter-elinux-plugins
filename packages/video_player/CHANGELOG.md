@@ -1,3 +1,6 @@
+## 1.0.0
+* Add `isPlaying` functionality with VideoPlayerController.
+
 ## 0.9.9
 * Add ELinuxVideoPlayer (VideoPlayerPlatform for eLinux) for flutter 3.13.
 

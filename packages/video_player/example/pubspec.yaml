@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  video_player: ^2.4.7
+  video_player: ^2.6.1
   video_player_elinux:
     path: ../
 
