@@ -1,6 +1,6 @@
 # video_player_elinux
 
-The implementation of the Video Player plugin for flutter elinux. APIs are designed to be API compatible with the the official [`video_player`](https://github.com/flutter/plugins/tree/master/packages/video_player).
+The implementation of the Video Player plugin for flutter elinux. APIs are designed to be API compatible with the the official [`video_player`](https://github.com/flutter/packages/tree/main/packages/video_player/video_player).
 
 ![image](https://user-images.githubusercontent.com/62131389/124210378-43f06400-db26-11eb-8723-40dad0eb67b0.png)
 
