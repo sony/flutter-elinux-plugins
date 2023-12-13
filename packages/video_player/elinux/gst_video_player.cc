@@ -403,6 +403,8 @@ void GstVideoPlayer::GetVideoSize(int32_t& width, int32_t& height) {
     return;
   }
 #endif  // USE_EGL_IMAGE_DMABUF
+
+  gst_caps_unref(caps);
 }
 
 // static
@@ -416,6 +418,7 @@ void GstVideoPlayer::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
   int height;
   gst_structure_get_int(structure, "width", &width);
   gst_structure_get_int(structure, "height", &height);
+  gst_caps_unref(caps);
   if (width != self->width_ || height != self->height_) {
     self->width_ = width;
     self->height_ = height;
