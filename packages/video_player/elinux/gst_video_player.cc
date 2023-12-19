@@ -472,5 +472,8 @@ GstBusSyncReply GstVideoPlayer::HandleGstMessage(GstBus* bus,
     default:
       break;
   }
-  return GST_BUS_PASS;
+
+  gst_message_unref(message);
+
+  return GST_BUS_DROP;
 }

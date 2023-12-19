@@ -155,7 +155,7 @@ bool GstCamera::CreatePipeline() {
     std::cerr << "Failed to create a bus" << std::endl;
     return false;
   }
-  gst_bus_set_sync_handler(gst_.bus, (GstBusSyncHandler)HandleGstMessage, this,
+  gst_bus_set_sync_handler(gst_.bus, HandleGstMessage, this,
                            NULL);
 
   // Sets properties to fakesink to get the callback of a decoded frame.
@@ -291,8 +291,9 @@ void GstCamera::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
 }
 
 // static
-gboolean GstCamera::HandleGstMessage(GstBus* bus, GstMessage* message,
-                                     gpointer user_data) {
+GstBusSyncReply GstCamera::HandleGstMessage(GstBus* bus,
+                                            GstMessage* message,
+                                            gpointer user_data) {
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_ELEMENT: {
       auto const* st = gst_message_get_structure(message);
@@ -331,5 +332,8 @@ gboolean GstCamera::HandleGstMessage(GstBus* bus, GstMessage* message,
     default:
       break;
   }
-  return TRUE;
+
+  gst_message_unref(message);
+
+  return GST_BUS_DROP;
 }
