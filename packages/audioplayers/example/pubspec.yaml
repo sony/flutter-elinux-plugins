@@ -1,0 +1,28 @@
+name: audioplayers_elinux_example
+description: Demonstrates how to use the audioplayers plugin.
+publish_to: none
+
+dependencies:
+  audioplayers: ^6.0.0
+  audioplayers_elinux:
+    path: ../
+  collection: ^1.16.0
+  file_picker: ^6.1.1
+  flutter:
+    sdk: flutter
+  http: ^1.0.0
+  path_provider_elinux:
+    path: ../../path_provider
+  provider: ^6.0.5
+
+dev_dependencies:
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.13.0'
