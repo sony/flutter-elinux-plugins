@@ -276,6 +276,23 @@ void VideoPlayerPlugin::RegisterWithRegistrar(
 void VideoPlayerPlugin::HandleInitializeMethodCall(
     const flutter::EncodableValue& message,
     flutter::MessageReply<flutter::EncodableValue> reply) {
+  // Dispose of all existing players. This helps to shut down existing players
+  // on a hot restart.
+  // https://github.com/flutter/flutter/issues/10437
+  for (auto itr = players_.begin(); itr != players_.end(); itr++) {
+    auto texture_id = itr->first;
+    auto* player = itr->second.get();
+    player->event_sink = nullptr;
+    if (player->event_channel) {
+      player->event_channel->SetStreamHandler(nullptr);
+    }
+    player->player = nullptr;
+    player->buffer = nullptr;
+    player->texture = nullptr;
+    texture_registrar_->UnregisterTexture(texture_id);
+  }
+  players_.clear();
+
   flutter::EncodableMap result;
 
   result.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
