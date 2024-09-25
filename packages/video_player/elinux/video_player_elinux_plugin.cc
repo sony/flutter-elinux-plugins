@@ -63,19 +63,11 @@ class VideoPlayerPlugin : public flutter::Plugin {
     GstVideoPlayer::GstLibraryLoad();
   }
   virtual ~VideoPlayerPlugin() {
-    for (auto itr = players_.begin(); itr != players_.end(); itr++) {
+    for (auto itr = players_.begin(); itr != players_.end();) {
       auto texture_id = itr->first;
-      auto* player = itr->second.get();
-      player->event_sink = nullptr;
-      if (player->event_channel) {
-        player->event_channel->SetStreamHandler(nullptr);
-      }
-      player->player = nullptr;
-      player->buffer = nullptr;
-      player->texture = nullptr;
-      texture_registrar_->UnregisterTexture(texture_id);
+      DisposePlayer(texture_id);
+      itr = players_.erase(itr);
     }
-    players_.clear();
 
     GstVideoPlayer::GstLibraryUnload();
   }
@@ -131,6 +123,8 @@ class VideoPlayerPlugin : public flutter::Plugin {
   void SendInitializedEventMessage(int64_t texture_id);
   void SendPlayCompletedEventMessage(int64_t texture_id);
   void SendIsPlayingStateUpdate(int64_t texture_id, bool is_playing);
+
+  void DisposePlayer(int64_t texture_id);
 
   flutter::EncodableValue WrapError(const std::string& message,
                                     const std::string& code = std::string(),
@@ -279,19 +273,11 @@ void VideoPlayerPlugin::HandleInitializeMethodCall(
   // Dispose of all existing players. This helps to shut down existing players
   // on a hot restart.
   // https://github.com/flutter/flutter/issues/10437
-  for (auto itr = players_.begin(); itr != players_.end(); itr++) {
+  for (auto itr = players_.begin(); itr != players_.end();) {
     auto texture_id = itr->first;
-    auto* player = itr->second.get();
-    player->event_sink = nullptr;
-    if (player->event_channel) {
-      player->event_channel->SetStreamHandler(nullptr);
-    }
-    player->player = nullptr;
-    player->buffer = nullptr;
-    player->texture = nullptr;
-    texture_registrar_->UnregisterTexture(texture_id);
+    DisposePlayer(texture_id);
+    itr = players_.erase(itr);
   }
-  players_.clear();
 
   flutter::EncodableMap result;
 
@@ -321,6 +307,9 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
           [instance = instance.get()](
               size_t width, size_t height, void* egl_display,
               void* egl_context) -> const FlutterDesktopEGLImage* {
+            if (!instance->player) {
+              return nullptr;
+            }
             instance->egl_image->width = instance->player->GetWidth();
             instance->egl_image->height = instance->player->GetHeight();
             instance->egl_image->egl_image =
@@ -333,6 +322,9 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
       std::make_unique<flutter::TextureVariant>(flutter::PixelBufferTexture(
           [instance = instance.get()](
               size_t width, size_t height) -> const FlutterDesktopPixelBuffer* {
+            if (!instance->player) {
+              return nullptr;
+            }
             instance->buffer->width = instance->player->GetWidth();
             instance->buffer->height = instance->player->GetHeight();
             instance->buffer->buffer = instance->player->GetFrameBuffer();
@@ -416,15 +408,8 @@ void VideoPlayerPlugin::HandleDisposeMethodCall(
   flutter::EncodableMap result;
 
   if (players_.find(texture_id) != players_.end()) {
-    auto* player = players_[texture_id].get();
-    player->event_sink = nullptr;
-    player->event_channel->SetStreamHandler(nullptr);
-    player->player = nullptr;
-    player->buffer = nullptr;
-    player->texture = nullptr;
+    DisposePlayer(texture_id);
     players_.erase(texture_id);
-    texture_registrar_->UnregisterTexture(texture_id);
-
     result.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
                    flutter::EncodableValue());
   } else {
@@ -642,6 +627,20 @@ void VideoPlayerPlugin::SendIsPlayingStateUpdate(int64_t texture_id,
        flutter::EncodableValue(is_playing)}};
   flutter::EncodableValue event(encodables);
   players_[texture_id]->event_sink->Success(event);
+}
+
+void VideoPlayerPlugin::DisposePlayer(int64_t texture_id) {
+  if (players_.find(texture_id) != players_.end()) {
+    texture_registrar_->UnregisterTexture(texture_id);
+    auto* player = players_[texture_id].get();
+    player->event_sink = nullptr;
+    if (player->event_channel) {
+      player->event_channel->SetStreamHandler(nullptr);
+    }
+    player->player = nullptr;
+    player->buffer = nullptr;
+    player->texture = nullptr;
+  }
 }
 
 flutter::EncodableValue VideoPlayerPlugin::WrapError(
