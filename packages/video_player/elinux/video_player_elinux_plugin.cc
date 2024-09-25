@@ -393,9 +393,18 @@ void VideoPlayerPlugin::HandleCreateMethodCall(
 
   flutter::EncodableMap value;
   TextureMessage result;
-  result.SetTextureId(texture_id);
-  value.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
-                result.ToMap());
+
+  bool ok = players_[texture_id]->player->Init();
+  if (ok) {
+    result.SetTextureId(texture_id);
+    value.emplace(flutter::EncodableValue(kEncodableMapkeyResult),
+                  result.ToMap());
+  } else {
+    auto error_message = "Failed to initialize the player with texture id: " +
+                         std::to_string(texture_id);
+    value.emplace(flutter::EncodableValue(kEncodableMapkeyError),
+                  flutter::EncodableValue(WrapError(error_message)));
+  }
   reply(flutter::EncodableValue(value));
 }
 

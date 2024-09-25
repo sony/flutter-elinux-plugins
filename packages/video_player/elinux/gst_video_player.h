@@ -30,6 +30,7 @@ class GstVideoPlayer {
   static void GstLibraryLoad();
   static void GstLibraryUnload();
 
+  bool Init();
   bool Play();
   bool Pause();
   bool Stop();
@@ -64,7 +65,7 @@ class GstVideoPlayer {
   std::string ParseUri(const std::string& uri);
   bool CreatePipeline();
   void DestroyPipeline();
-  void Preroll();
+  bool Preroll();
   void GetVideoSize(int32_t& width, int32_t& height);
 #ifdef USE_EGL_IMAGE_DMABUF
   void UnrefEGLImage();

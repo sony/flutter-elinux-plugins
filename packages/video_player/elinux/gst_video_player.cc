@@ -23,15 +23,6 @@ GstVideoPlayer::GstVideoPlayer(
     DestroyPipeline();
     return;
   }
-
-  // Prerolls before getting information from the pipeline.
-  Preroll();
-
-  // Sets internal video size and buffier.
-  GetVideoSize(width_, height_);
-  pixels_.reset(new uint32_t[width_ * height_]);
-
-  stream_handler_->OnNotifyInitialized();
 }
 
 GstVideoPlayer::~GstVideoPlayer() {
@@ -47,6 +38,26 @@ void GstVideoPlayer::GstLibraryLoad() { gst_init(NULL, NULL); }
 
 // static
 void GstVideoPlayer::GstLibraryUnload() { gst_deinit(); }
+
+bool GstVideoPlayer::Init() {
+  if (!gst_.pipeline) {
+    return false;
+  }
+
+  // Prerolls before getting information from the pipeline.
+  if (!Preroll()) {
+    DestroyPipeline();
+    return false;
+  }
+
+  // Sets internal video size and buffier.
+  GetVideoSize(width_, height_);
+  pixels_.reset(new uint32_t[width_ * height_]);
+
+  stream_handler_->OnNotifyInitialized();
+
+  return true;
+}
 
 bool GstVideoPlayer::Play() {
   if (gst_element_set_state(gst_.pipeline, GST_STATE_PLAYING) ==
@@ -294,15 +305,15 @@ bool GstVideoPlayer::CreatePipeline() {
   return true;
 }
 
-void GstVideoPlayer::Preroll() {
+bool GstVideoPlayer::Preroll() {
   if (!gst_.playbin) {
-    return;
+    return false;
   }
 
   auto result = gst_element_set_state(gst_.pipeline, GST_STATE_PAUSED);
   if (result == GST_STATE_CHANGE_FAILURE) {
     std::cerr << "Failed to change the state to PAUSED" << std::endl;
-    return;
+    return false;
   }
 
   // Waits until the state becomes GST_STATE_PAUSED.
@@ -312,8 +323,10 @@ void GstVideoPlayer::Preroll() {
         gst_element_get_state(gst_.pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
     if (result == GST_STATE_CHANGE_FAILURE) {
       std::cerr << "Failed to get the current state" << std::endl;
+      return false;
     }
   }
+  return true;
 }
 
 void GstVideoPlayer::DestroyPipeline() {
