@@ -296,6 +296,7 @@ bool GstVideoPlayer::CreatePipeline() {
   auto* ghost_sinkpad = gst_ghost_pad_new("sink", sinkpad);
   gst_pad_set_active(ghost_sinkpad, TRUE);
   gst_element_add_pad(gst_.output, ghost_sinkpad);
+  gst_object_unref(sinkpad);
 
   // Sets properties to playbin.
   g_object_set(gst_.playbin, "uri", uri_.c_str(), NULL);
@@ -400,9 +401,17 @@ void GstVideoPlayer::GetVideoSize(int32_t& width, int32_t& height) {
   }
 
   auto* caps = gst_pad_get_current_caps(sink_pad);
+  if (!caps) {
+    std::cerr << "Failed to get caps" << std::endl;
+    gst_object_unref(sink_pad);
+    return;
+  }
+
   auto* structure = gst_caps_get_structure(caps, 0);
   if (!structure) {
-    std::cerr << "Failed to get a structure";
+    std::cerr << "Failed to get a structure" << std::endl;
+    gst_caps_unref(caps);
+    gst_object_unref(sink_pad);
     return;
   }
 
@@ -413,11 +422,14 @@ void GstVideoPlayer::GetVideoSize(int32_t& width, int32_t& height) {
   gboolean res = gst_video_info_from_caps(&gst_video_info_, caps);
   if (!res) {
     std::cerr << "Failed to get a gst_video_info" << std::endl;
+    gst_caps_unref(caps);
+    gst_object_unref(sink_pad);
     return;
   }
 #endif  // USE_EGL_IMAGE_DMABUF
 
   gst_caps_unref(caps);
+  gst_object_unref(sink_pad);
 }
 
 // static
