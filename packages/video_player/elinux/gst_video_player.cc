@@ -376,13 +376,13 @@ std::string GstVideoPlayer::ParseUri(const std::string& uri) {
     return uri;
   }
 
-  const auto* filename_uri = gst_filename_to_uri(uri.c_str(), NULL);
+  auto* filename_uri = gst_filename_to_uri(uri.c_str(), NULL);
   if (!filename_uri) {
     std::cerr << "Faild to open " << uri.c_str() << std::endl;
     return uri;
   }
   std::string result_uri(filename_uri);
-  delete filename_uri;
+  g_free(filename_uri);
 
   return result_uri;
 }
