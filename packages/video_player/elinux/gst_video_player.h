@@ -73,7 +73,7 @@ class GstVideoPlayer {
 
   GstVideoElements gst_;
   std::string uri_;
-  std::unique_ptr<uint32_t> pixels_;
+  std::unique_ptr<uint32_t[]> pixels_;
   int32_t width_;
   int32_t height_;
   double volume_ = 1.0;
