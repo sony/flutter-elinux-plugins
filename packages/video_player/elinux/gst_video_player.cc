@@ -166,25 +166,6 @@ int64_t GstVideoPlayer::GetCurrentPosition() {
     return -1;
   }
 
-  // TODO: We need to handle this code in the proper plase.
-  // The VideoPlayer plugin doesn't have a main loop, so EOS message
-  // received from GStreamer cannot be processed directly in a callback
-  // function. This is because the event channel message of playback complettion
-  // needs to be thrown in the main thread.
-  {
-    std::unique_lock<std::mutex> lock(mutex_event_completed_);
-    if (is_completed_) {
-      is_completed_ = false;
-      lock.unlock();
-
-      if (auto_repeat_) {
-        SetSeek(0);
-      } else {
-        stream_handler_->OnNotifyCompleted();
-      }
-    }
-  }
-
   return position / GST_MSECOND;
 }
 
@@ -468,8 +449,11 @@ GstBusSyncReply GstVideoPlayer::HandleGstMessage(GstBus* bus,
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_EOS: {
       auto* self = reinterpret_cast<GstVideoPlayer*>(user_data);
-      std::lock_guard<std::mutex> lock(self->mutex_event_completed_);
-      self->is_completed_ = true;
+      if (self->auto_repeat_) {
+        self->SetSeek(0);
+      } else {
+        self->stream_handler_->OnNotifyCompleted();
+      }
       break;
     }
     case GST_MESSAGE_WARNING: {
