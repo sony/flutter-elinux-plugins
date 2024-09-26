@@ -15,7 +15,6 @@
 #endif  // USE_EGL_IMAGE_DMABUF
 
 #include <memory>
-#include <mutex>
 #include <shared_mutex>
 #include <string>
 
@@ -80,8 +79,6 @@ class GstVideoPlayer {
   double playback_rate_ = 1.0;
   bool mute_ = false;
   bool auto_repeat_ = false;
-  bool is_completed_ = false;
-  std::mutex mutex_event_completed_;
   std::shared_mutex mutex_buffer_;
   std::unique_ptr<VideoPlayerStreamHandler> stream_handler_;
 
