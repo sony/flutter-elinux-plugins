@@ -21,6 +21,7 @@ The plugins for elinux are basically designed to be API compatible with the offi
 | [path_provider_elinux](packages/path_provider) | [path_provider](https://github.com/flutter/packages/tree/main/packages/path_provider) |
 | [shared_preferences_elinux](packages/shared_preferences) | [shared_preferences](https://github.com/flutter/packages/tree/main/packages/shared_preferences) |
 | [joystick](packages/joystick) | - |
+|[flutter-webrtc](https://github.com/flutter-webrtc/flutter-webrtc)|<- Thanks, [@cloudwebrtc](https://github.com/cloudwebrtc)|
 
 ## Getting Started
 
