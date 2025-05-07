@@ -67,6 +67,30 @@ class AudioplayersElinuxPlugin : public flutter::Plugin {
             plugin_pointer->HandleGlobalMethodCall(call, std::move(result));
           });
     }
+    {
+      auto global_event_channel =
+          std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+            registrar->messenger(), "xyz.luan/audioplayers.global/events",
+            &flutter::StandardMethodCodec::GetInstance());
+      auto global_event_channel_handler = std::make_unique<
+          flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
+            // StreamHandlerFunctions
+            [](
+                const flutter::EncodableValue* arguments,
+                std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&&
+                    events)
+                -> std::unique_ptr<
+                  flutter::StreamHandlerError<flutter::EncodableValue>> {
+              return nullptr;
+            },
+            // StreamHandlerCancel
+            [](const flutter::EncodableValue* arguments)
+                -> std::unique_ptr<
+                    flutter::StreamHandlerError<flutter::EncodableValue>> {
+              return nullptr;
+            });
+      global_event_channel->SetStreamHandler(std::move(global_event_channel_handler));
+    }
     registrar->AddPlugin(std::move(plugin));
   }
 
@@ -197,7 +221,14 @@ class AudioplayersElinuxPlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     const std::string &method_name = method_call.method_name();
-    if (method_name == "setAudioContext") {
+    if (method_name == "init") {
+      for (auto &pair : audio_players_) {
+        audio_players_.erase(pair.first);
+        event_sinks_.erase(pair.first);
+      }
+      audio_players_.clear();
+      result->Success();
+    } else if (method_name == "setAudioContext") {
       result->NotImplemented();
     } else if (method_name == "emitLog") {
       result->NotImplemented();
