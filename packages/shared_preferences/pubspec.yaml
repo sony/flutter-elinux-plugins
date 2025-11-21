@@ -17,7 +17,7 @@ flutter:
         pluginClass: none
 
 dependencies:
-  file: ^6.0.0
+  file: ^7.0.0
   flutter:
     sdk: flutter
   path: ^1.8.0
