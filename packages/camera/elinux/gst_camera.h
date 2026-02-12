@@ -30,6 +30,16 @@ class GstCamera {
   bool Stop();
 
   void TakePicture(OnNotifyCaptured on_notify_captured);
+  // Add these public methods in GstCamera class:
+  void StartVideoRecording(const std::string& file_path,
+                           OnNotifyCaptured on_notify_captured);
+  void StopVideoRecording();
+  bool IsRecording() const { return is_recording_; }
+
+  // Add these private members:
+  bool is_recording_ = false;
+  std::string video_file_path_;
+  OnNotifyCaptured on_video_captured_ = nullptr;
 
   bool SetZoomLevel(float zoom);
   float GetMaxZoomLevel() const { return max_zoom_level_; };
@@ -53,7 +63,7 @@ class GstCamera {
   static void HandoffHandler(GstElement* fakesink, GstBuffer* buf,
                              GstPad* new_pad, gpointer user_data);
   static GstBusSyncReply HandleGstMessage(GstBus* bus, GstMessage* message,
-                                   gpointer user_data);
+                                          gpointer user_data);
 
   bool CreatePipeline();
   void DestroyPipeline();
