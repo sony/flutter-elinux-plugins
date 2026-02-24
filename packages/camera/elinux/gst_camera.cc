@@ -90,6 +90,46 @@ void GstCamera::TakePicture(OnNotifyCaptured on_notify_captured) {
   g_signal_emit_by_name(gst_.camerabin, "start-capture", NULL);
 }
 
+void GstCamera::StartVideoRecording(const std::string& file_path,
+                                    OnNotifyCaptured on_notify_captured) {
+  if (!gst_.camerabin) {
+    std::cerr << "Failed to start video recording: camerabin not initialized"
+              << std::endl;
+    return;
+  }
+
+  if (is_recording_) {
+    std::cerr << "Video recording already in progress" << std::endl;
+    return;
+  }
+
+  on_video_captured_ = on_notify_captured;
+  video_file_path_ = file_path;
+
+  // Set mode to video (2 = video mode)
+  g_object_set(gst_.camerabin, "mode", 2, NULL);
+  g_object_set(gst_.camerabin, "location", file_path.c_str(), NULL);
+
+  // Start recording
+  g_signal_emit_by_name(gst_.camerabin, "start-capture", NULL);
+  is_recording_ = true;
+
+  std::cout << "Started video recording to: " << file_path << std::endl;
+}
+
+void GstCamera::StopVideoRecording() {
+  if (!gst_.camerabin || !is_recording_) {
+    std::cerr << "No active video recording to stop" << std::endl;
+    return;
+  }
+
+  // Stop recording
+  g_signal_emit_by_name(gst_.camerabin, "stop-capture", NULL);
+  is_recording_ = false;
+
+  std::cout << "Stopped video recording" << std::endl;
+}
+
 bool GstCamera::SetZoomLevel(float zoom) {
   if (zoom_level_ == zoom) {
     return true;
@@ -155,8 +195,7 @@ bool GstCamera::CreatePipeline() {
     std::cerr << "Failed to create a bus" << std::endl;
     return false;
   }
-  gst_bus_set_sync_handler(gst_.bus, HandleGstMessage, this,
-                           NULL);
+  gst_bus_set_sync_handler(gst_.bus, HandleGstMessage, this, NULL);
 
   // Sets properties to fakesink to get the callback of a decoded frame.
   g_object_set(G_OBJECT(gst_.video_sink), "sync", TRUE, "qos", FALSE, NULL);
@@ -291,18 +330,29 @@ void GstCamera::HandoffHandler(GstElement* fakesink, GstBuffer* buf,
 }
 
 // static
-GstBusSyncReply GstCamera::HandleGstMessage(GstBus* bus,
-                                            GstMessage* message,
+GstBusSyncReply GstCamera::HandleGstMessage(GstBus* bus, GstMessage* message,
                                             gpointer user_data) {
   switch (GST_MESSAGE_TYPE(message)) {
     case GST_MESSAGE_ELEMENT: {
       auto const* st = gst_message_get_structure(message);
       if (st) {
         auto* self = reinterpret_cast<GstCamera*>(user_data);
+
+        // Handle image capture completion
         if (gst_structure_has_name(st, "image-done") &&
             self->on_notify_captured_) {
           auto const* filename = gst_structure_get_string(st, "filename");
           self->on_notify_captured_(filename);
+        }
+
+        // Handle video recording completion
+        if (gst_structure_has_name(st, "video-done") &&
+            self->on_video_captured_) {
+          auto const* filename = gst_structure_get_string(st, "filename");
+          self->on_video_captured_(filename);
+          self->is_recording_ = false;
+          // Switch back to image mode (1)
+          g_object_set(self->gst_.camerabin, "mode", 1, NULL);
         }
       }
       break;

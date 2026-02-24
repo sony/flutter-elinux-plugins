@@ -113,6 +113,12 @@ class CameraPlugin : public flutter::Plugin {
   void HandleDisposeCall(
       const flutter::EncodableValue* message,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleStartVideoRecording(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  void HandleStopVideoRecording(
+      const flutter::EncodableValue* message,
+      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 
   flutter::PluginRegistrar* plugin_registrar_;
   flutter::TextureRegistrar* texture_registrar_;
@@ -126,6 +132,7 @@ class CameraPlugin : public flutter::Plugin {
       nullptr;
   std::unique_ptr<MethodChannelCamera> method_channel_camera_;
   std::unique_ptr<MethodChannelDevice> method_channel_device_;
+  int video_recording_count_ = 0;  // <-- ADD THIS LINE HERE
 };
 
 // static
@@ -159,11 +166,11 @@ void CameraPlugin::HandleMethodCall(
   } else if (!method_name.compare(kCameraChannelApiTakePicture)) {
     HandleTakePictureCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiPrepareForVideoRecording)) {
-    result->NotImplemented();
+    HandleTakePictureCall(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiStartVideoRecording)) {
-    result->NotImplemented();
+    HandleStartVideoRecording(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiStopVideoRecording)) {
-    result->NotImplemented();
+    HandleStopVideoRecording(method_call.arguments(), std::move(result));
   } else if (!method_name.compare(kCameraChannelApiPauseVideoRecording)) {
     result->NotImplemented();
   } else if (!method_name.compare(kCameraChannelApiResumeVideoRecording)) {
@@ -312,6 +319,55 @@ void CameraPlugin::HandleTakePictureCall(
     }
     delete p_result;
   });
+}
+
+void CameraPlugin::HandleStartVideoRecording(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+
+  if (camera_->IsRecording()) {
+    result->Error("Already recording", "Stop current recording first");
+    return;
+  }
+
+  // Generate filename
+  std::string filename =
+      g_strdup_printf("video_%04u.mp4", video_recording_count_++);
+
+  camera_->StartVideoRecording(
+      filename,
+      [p_result = result.release()](const std::string& video_file_path) {
+        if (!video_file_path.empty()) {
+          flutter::EncodableValue value(video_file_path);
+          p_result->Success(value);
+        } else {
+          p_result->Error("Failed to record", "Video recording failed");
+        }
+        delete p_result;
+      });
+}
+
+void CameraPlugin::HandleStopVideoRecording(
+    const flutter::EncodableValue* message,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  if (!camera_) {
+    result->Error("Not found an active camera",
+                  "Check for creating a camera device");
+    return;
+  }
+
+  if (!camera_->IsRecording()) {
+    result->Error("Not recording", "No active video recording");
+    return;
+  }
+
+  camera_->StopVideoRecording();
+  // Note: result will be sent via the callback when video-done message arrives
 }
 
 void CameraPlugin::HandleGetMinExposureOffsetCall(
