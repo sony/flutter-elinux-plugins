@@ -67,6 +67,31 @@ class AudioplayersElinuxPlugin : public flutter::Plugin {
             plugin_pointer->HandleGlobalMethodCall(call, std::move(result));
           });
     }
+    {
+      auto global_event_channel =
+          std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+              registrar->messenger(), "xyz.luan/audioplayers.global/events",
+              &flutter::StandardMethodCodec::GetInstance());
+      auto global_event_handler = std::make_unique<
+          flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
+          [plugin_pointer = plugin.get()](
+              const flutter::EncodableValue* arguments,
+              std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&&
+                  events)
+              -> std::unique_ptr<
+                  flutter::StreamHandlerError<flutter::EncodableValue>> {
+            plugin_pointer->global_event_sink_ = std::move(events);
+            return nullptr;
+          },
+          [plugin_pointer = plugin.get()](
+              const flutter::EncodableValue* arguments)
+              -> std::unique_ptr<
+                  flutter::StreamHandlerError<flutter::EncodableValue>> {
+            plugin_pointer->global_event_sink_ = nullptr;
+            return nullptr;
+          });
+      global_event_channel->SetStreamHandler(std::move(global_event_handler));
+    }
     registrar->AddPlugin(std::move(plugin));
   }
 
@@ -197,12 +222,53 @@ class AudioplayersElinuxPlugin : public flutter::Plugin {
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     const std::string &method_name = method_call.method_name();
-    if (method_name == "setAudioContext") {
-      result->NotImplemented();
+    if (method_name == "init") {
+      for (auto& entry : audio_players_) {
+        entry.second->Dispose();
+      }
+      audio_players_.clear();
+      event_sinks_.clear();
+      result->Success();
+    } else if (method_name == "setAudioContext") {
+      // AudioContext is not supported on eLinux; log and succeed.
+      if (global_event_sink_) {
+        flutter::EncodableMap map = {
+            {flutter::EncodableValue("event"),
+             flutter::EncodableValue(kAudioLogEvent)},
+            {flutter::EncodableValue("value"),
+             flutter::EncodableValue(
+                 std::string("Setting AudioContext is not supported on eLinux"))}};
+        global_event_sink_->Success(flutter::EncodableValue(map));
+      }
+      result->Success();
     } else if (method_name == "emitLog") {
-      result->NotImplemented();
+      const auto* arguments =
+          std::get_if<flutter::EncodableMap>(method_call.arguments());
+      std::string message;
+      if (arguments) {
+        GetValueFromEncodableMap(arguments, "message", message);
+      }
+      if (global_event_sink_) {
+        flutter::EncodableMap map = {
+            {flutter::EncodableValue("event"),
+             flutter::EncodableValue(kAudioLogEvent)},
+            {flutter::EncodableValue("value"),
+             flutter::EncodableValue(message)}};
+        global_event_sink_->Success(flutter::EncodableValue(map));
+      }
+      result->Success();
     } else if (method_name == "emitError") {
-      result->NotImplemented();
+      const auto* arguments =
+          std::get_if<flutter::EncodableMap>(method_call.arguments());
+      std::string code, message;
+      if (arguments) {
+        GetValueFromEncodableMap(arguments, "code", code);
+        GetValueFromEncodableMap(arguments, "message", message);
+      }
+      if (global_event_sink_) {
+        global_event_sink_->Error(code, message);
+      }
+      result->Success();
     } else {
       result->NotImplemented();
     }
@@ -294,6 +360,8 @@ class AudioplayersElinuxPlugin : public flutter::Plugin {
   std::map<std::string,
       std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>>
         event_sinks_;
+  std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>
+      global_event_sink_;
   flutter::PluginRegistrar* registrar_;
 };
 
